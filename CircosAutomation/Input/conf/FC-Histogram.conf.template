@@ -1,0 +1,39 @@
+# Histogram for fold-change.
+# Track type, data and position.
+type = histogram
+
+# Histogram style.
+thickness = 1p
+extend_bin = no
+
+# Positive fold-changes show up as blue, negative fold changes show up as red.
+<rules>
+    <rule>
+        condition  = var(value) < 0
+        fill_color = red
+    </rule>
+
+    <rule>
+        condition  = var(value) >= 0
+        fill_color = green
+    </rule> 
+</rules>
+
+
+# Show background gradient.
+<backgrounds>
+    # Show the backgrounds only for ideograms that have data
+    show  = data
+
+    <background>
+        color = vlgrey
+        y0    = -1r
+        y1    = 0
+    </background>
+    <background>
+        color = vvlgrey
+        y0    = 0
+        y1    = 1r
+    </background>        
+</backgrounds>
+

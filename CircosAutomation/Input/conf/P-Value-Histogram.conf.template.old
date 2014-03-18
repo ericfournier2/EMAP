@@ -1,0 +1,42 @@
+# Histogram for p-values.
+type = histogram
+
+# Line thickness.
+thickness = 1p
+
+# Color gradient based on value.
+# Rule evaluation stops at the first condition which is met, which is why
+# we can test against increasing values and yet trigger only one fill_color.
+<rules>
+    <rule>
+        condition  = var(value) <= 0.3
+        fill_color = vvlblue
+    </rule>
+    <rule>
+        condition  = var(value) <= 0.3333
+        fill_color = vlblue
+    </rule>
+    <rule>
+        condition  = var(value) <= 0.3666
+        fill_color = lblue
+    </rule>
+    <rule>
+        condition  = var(value) <= 0.4000
+        fill_color = blue
+    </rule> 
+    <rule>
+        condition  = var(value) <= 0.4333
+        fill_color = dblue
+    </rule> 
+    <rule>
+        condition  = var(value) <= 0.4666
+        fill_color = vdblue
+    </rule> 
+    <rule>
+        condition  = var(value) <= 1
+        fill_color = vvdblue
+    </rule>
+</rules>
+
+# Do not extend bin. This has no effect since our bins are already contiguous.
+extend_bin  = no

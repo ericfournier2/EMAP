@@ -1,0 +1,110 @@
+# Chromosome name, size, color and bands definition.
+karyotype = Input/cow.UMD3.1.karyotype.txt
+
+# Define the chromosome unit, which will be what the "u" suffix will refer to from now on.
+chromosomes_units = 1000000
+
+<<include Input/conf/ideogram.conf>>
+<<include Input/conf/ticks.conf>>
+
+<plots>
+    # P-value histogram plots.
+    <plot>
+        <<include Input/conf/P-Value-HistogramPROBE_SUBSET.conf.template>>
+        file = ProcessedData/Fragment-P-ValuePROBE_SUBSET.bedgraph
+        r1   = 0.99r
+        r0   = 0.89r        
+    </plot>
+    # <plot>
+    #     <<include Input/conf/P-Value-Histogram.conf.template>>
+    #     file = ProcessedData/Trans-P-Value.bedgraph
+    #     r1   = 0.73r
+    #     r0   = 0.63r        
+    # </plot>
+
+    # Diff-expr overlays for the p-value plots.
+    <plot>
+        <<include Input/conf/DiffExpr.conf.template>>
+        file = ProcessedData/DiffExpr-P-Value.bedgraph
+        r1   = 0.99r
+        r0   = 0.89r
+    </plot>
+    # <plot>
+    #     <<include Input/conf/DiffExpr.conf.template>>
+    #     file = ProcessedData/DiffExpr-P-Value-Trans.bedgraph
+    #     r1   = 0.73r
+    #     r0   = 0.63r
+    # </plot>
+    
+    # Fold-change plots.
+    <plot>
+        <<include Input/conf/FC-Histogram.conf.template>>
+        file = ProcessedData/Fragment-Fold-ChangePROBE_SUBSET.bedgraph
+        r1   = 0.86r
+        r0   = 0.76r        
+    </plot>
+    # <plot>
+    #     <<include Input/conf/FC-Histogram.conf.template>>
+    #     file = ProcessedData/Trans-FC.bedgraph
+    #     r1   = 0.60r
+    #     r0   = 0.50r        
+    # </plot>
+
+     <plot>
+         <<include Input/conf/Cond-Mean-Histogram.conf.template>>
+         file = ProcessedData/Fragment-Cond-Mean-A.bedgraph
+         fill_color = lorange
+         r1   = 0.73r
+         r0   = 0.63r
+     </plot>
+    
+    # Imprinted fold-change track.
+    <plot>
+        <<include Input/conf/FC-Histogram.conf.template>>
+        file = ProcessedData/Imprint-Fold-Change.bedgraph
+        r1   = 0.60r
+        r0   = 0.50r        
+    </plot>
+    
+    # Imprinted name track.
+    <<include Input/conf/ImprintNames.conf.template>>
+</plots>
+
+################################################################
+# The remaining content is standard and required. It is imported from
+# default files in the Circos distribution.
+<image>
+    # Included from Circos distribution.
+    <<include etc/image.conf>> 
+
+    # This name is replaced using sed prior to processing.
+    dir*  = Output/OUTPUT_FILE
+    file* = OUTPUT_FILEPROBE_SUBSET.png                 
+</image>
+
+# RGB/HSV color definitions, color lists, location of fonts, fill patterns.
+# Included from Circos distribution.
+<<include etc/colors_fonts_patterns.conf>> 
+
+# Debugging, I/O an dother system parameters
+# Included from Circos distribution.
+<<include etc/housekeeping.conf>>
+
+
+
+
+# Unused for now:
+#    <plot>
+#        <<include Cond-Mean-Histogram.conf.template>>
+#        file = ProcessedData/Fragment-Cond-Mean-A.bedgraph
+#        fill_color = lpurple
+#        r1   = 0.60r
+#        r0   = 0.50r
+#    </plot>
+#    <plot>
+#        <<include Cond-Mean-Histogram.conf.template>>
+#        file = ProcessedData/Fragment-Cond-Mean-B.bedgraph
+#        fill_color = lorange
+#        r1   = 0.73r
+#        r0   = 0.63r
+#    </plot>

@@ -1,0 +1,1 @@
+bash FullAnalysis.sh "ICM vs TE Epigenetic" "AllEpi.target" "Raw/ICM vs TE" "ICM vs TE Transcriptomic" "AllTrans.target" "Raw/ICM vs TE" "TE" "ICM vs TE Combined" 1.5 0.05

@@ -1,0 +1,27 @@
+# Displays the text label of genes whose expression and methylation are
+# correlated in the "right" direction.
+<plot>
+    type       = text
+    
+    # Data file and track position.
+    file       = ProcessedData/Concordant.txt
+    r0         = 0.4r
+    r1         = 0.5r
+    
+    # Text appearance.
+    color      = black
+    label_size = 16p
+
+    # Draw lines "surrounding" the gene names to frame them.
+    <axes>
+        show = yes
+        thickness = 1
+        color     = grey
+        <axis>
+            position = 0r
+        </axis>
+        <axis>
+            position = 0.9r
+        </axis>
+    </axes>
+</plot>

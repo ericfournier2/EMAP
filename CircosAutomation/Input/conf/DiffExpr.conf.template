@@ -1,0 +1,14 @@
+# Scatterplot overlay over the p-value histograms. Shows triangles where
+# the top 100 differentially methylated/expressed genes are.
+#
+# Up-regulated/methylated probes are shown as upward green triangles.
+# Down-regulated/methylated probes are shown as downward red triangles.
+# The selection of the direction is done directly within the data file,
+# where the "color" and "angle_shift" values are overridden.
+type = scatter
+
+# Line thickness.
+glyph_size       = 20
+glyph            = triangle
+stroke_color     = black
+stroke_thickness = 1

@@ -1,0 +1,53 @@
+# Histogram for p-values.
+type = histogram
+
+# Line thickness.
+thickness = 1p
+
+# Color gradient based on value.
+# Rule evaluation stops at the first condition which is met, which is why
+# we can test against increasing values and yet trigger only one fill_color.
+<rules>
+    <rule>
+        condition  = var(value) <= 4
+        fill_color = vvlgreen
+    </rule>
+    <rule>
+        condition  = var(value) <= 6
+        fill_color = vlgreen
+    </rule>
+    <rule>
+        condition  = var(value) <= 8
+        fill_color = lgreen
+    </rule>
+    <rule>
+        condition  = var(value) <= 10
+        fill_color = green
+    </rule> 
+    <rule>
+        condition  = var(value) <= 12
+        fill_color = dgreen
+    </rule> 
+    <rule>
+        condition  = var(value) <= 14
+        fill_color = vdgreen
+    </rule> 
+    <rule>
+        condition  = var(value) <= 16
+        fill_color = vvdgreen
+    </rule>
+</rules>
+
+# Do not extend bin. This has no effect since our bins are already contiguous.
+extend_bin  = no
+# Show axes at every 10%
+<axes>
+    # Show axes only on ideograms that have data for this track
+    show = data
+
+    thickness = 1
+    color     = lgrey
+    <axis>
+        spacing   = 0.1r
+    </axis>
+</axes>
