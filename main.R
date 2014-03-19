@@ -61,12 +61,24 @@ writeEnrichmentData <- function(enrich, folder, relativeOnly) {
     # Plot the enrichment data.
     plotEnrichmentData(enrich, reference_Condition, getOtherCondition(epigeneticsData$Target, reference_Condition), relativeOnly)
     
+    # Replace line-breaks in captions.
+    for(i in 1:(length(enrich))) {
+        enrich[[i]]$"Relative DMR Count" <- gsub("\n", " ", enrich[[i]]$"Relative DMR Count")
+    }
+
+    # Add FDR corrected p-values to the TFBS data-frame.
+    enrich$TFBS <- cbind(enrich$TFBS,
+                         "p-value-low-fdr"=p.adjust(enrich$TFBS$"p-value-low", method="fdr"),
+                         "p-value-high-fdr"=p.adjust(enrich$TFBS$"p-value-high", method="fdr"))
+    
     # Write out the raw enrichment data.
     write.table(enrich$GeneRegion, file="Enrichment - Gene Regions.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
     write.table(enrich$Proximity, file="Enrichment - CpG Proximity.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
     write.table(enrich$Length, file="Enrichment - CpG Length.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
     write.table(enrich$Density, file="Enrichment - CpG Density.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
     write.table(enrich$RepeatClasses, file="Enrichment - Repeat Classes.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
+    write.table(enrich$TFBS, file="Enrichment - TFBS.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
+
     setwd(previousWD)
 }
 
@@ -78,7 +90,10 @@ annotationFolder <- file.path("Annotations", VERSION)
 if(epigenetic_Name!="") {
     # Load epigenetic data and annotations.
     epigeneticsData <- loadData(epigenetic_Folder, epigenetic_Target)
+    otherCondition <- getOtherCondition(epigeneticsData$Target, reference_Condition)
+
     annotation <- read.table(file.path(annotationFolder, "EDMA.Annotation.txt"), header=TRUE, sep="\t")
+    categories <- read.table(file.path(annotationFolder, "Categories.txt"), header=TRUE, sep="\t")
 
     # We're done reading data: move to output directory
     dir.create(file.path("Results", epigenetic_Name), showWarnings=FALSE, recursive=TRUE)
@@ -107,7 +122,7 @@ if(epigenetic_Name!="") {
     # Output results of the limma analysis
     dir.create("Limma Analysis", showWarnings=FALSE, recursive=TRUE)
     setwd("Limma Analysis")
-    outputLimmaResults(limmaResults)
+    outputLimmaResults(limmaResults, annotation, reference_Condition, otherCondition, categories=categories)
     generateVolcanoPlot(limmaResults$Fit, foldchange_Threshold, pvalue_Threshold, epigeneticsData$Target, reference_Condition, "Hyper-methylated")
     generateAboveBackgroundPlots(epigeneticsData, limmaResults, reference_Condition)
     setwd("..")
@@ -126,7 +141,6 @@ if(epigenetic_Name!="") {
 
     writeEnrichmentData(enrichDMRs, "DMRs", "")
     writeEnrichmentData(enrichRef, reference_Condition, reference_Condition)
-    otherCondition <- getOtherCondition(epigeneticsData$Target, reference_Condition)
     writeEnrichmentData(enrichOther, otherCondition, otherCondition)
     
     # Perform hot-spot detection.
@@ -145,6 +159,8 @@ if(transcriptomic_Name!="") {
     # Load transcriptomic data and probe positions. 
     transcriptomicsData <- loadData(transcriptomic_Folder, transcriptomic_Target)
     bedTrans <- read.table(file.path(annotationFolder, "BestEMBV3.bed"), sep="\t", col.names=c("BEDChromosome", "Start", "End", "Probe"))
+    otherCondition <- getOtherCondition(transcriptomicsData$Target, reference_Condition)
+    annotationTrans <- read.table("Annotations/EMBV3.annotation_table_2.xls", header=TRUE, sep="\t", quote="")
 
     # Move into output directory
     dir.create(file.path("Results", transcriptomic_Name), showWarnings=FALSE, recursive=TRUE)
@@ -155,7 +171,7 @@ if(transcriptomic_Name!="") {
     limmaResultsTrans <- doLimmaAnalysis(transcriptomicsData$Target, transcriptomicsData$IntensityData, foldchange_Threshold, pvalue_Threshold, reference_Condition)
 
     # Output limma results.
-    outputLimmaResults(limmaResultsTrans)
+    outputLimmaResults(limmaResultsTrans, annotationTrans, reference_Condition, otherCondition)
     generateVolcanoPlot(limmaResultsTrans$Fit, foldchange_Threshold, pvalue_Threshold, epigeneticsData$Target, reference_Condition, "Over-expressed")
     
     
@@ -190,8 +206,8 @@ if(epigenetic_Name!="" && transcriptomic_Name!="") {
     # Match epigenetic probes to their annotation, and obtain numerical data which is in the same
     # order as the annotations.
     annToInt <- match(annotation$Probe,  epigeneticsData$IntensityData$genes$ID)
-    allMeans <- apply(cbind(epigeneticsData$IntensityData$R, epigeneticsData$IntensityData$G), 1, mean)
-    matchedInt <- allMeans[annToInt]
+#    allMeans <- apply(cbind(epigeneticsData$IntensityData$R, epigeneticsData$IntensityData$G), 1, mean)
+#    matchedInt <- allMeans[annToInt]
     matchedFC <- limmaResults$Fit$coefficients[annToInt]
     matchedP <- limmaResults$Fit$p.value[annToInt]
 
@@ -203,7 +219,7 @@ if(epigenetic_Name!="" && transcriptomic_Name!="") {
       ((matchedFC*limmaResultsTrans$Fit$coefficients[epiToTransMatch])<0)
 
     # Remove NAs and keep only relevant rows
-    concordant <- annotation[which(indices),]
+    concordant <- annotation[which(indices),, drop=FALSE]
 
     # Get single, most relevant gene name:
     # Paste together all gene symbols in order of importance. Detect exon/intron by their 
@@ -222,10 +238,10 @@ if(epigenetic_Name!="" && transcriptomic_Name!="") {
                               geneName)
 
     # Remove entries without gene names in the Exon/Intron/Promoter part.
-    concordantLabels <- concordantLabels[concordantLabels[,4]!="",]
+    concordantLabels <- concordantLabels[concordantLabels[,4]!="",, drop=FALSE]
 
     # Remove duplicate gene names.
-    concordantLabels <- concordantLabels[!duplicated(concordantLabels[,4]),]
+    concordantLabels <- concordantLabels[!duplicated(concordantLabels[,4]),, drop=FALSE]
 
     # Write out the table.                          
     dir.create(file.path("Results", combined_Name), showWarnings=FALSE, recursive=TRUE)

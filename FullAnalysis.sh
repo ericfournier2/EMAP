@@ -51,15 +51,15 @@ ln -f -s "`pwd`/Results/$EPIGENETIC_NAME/Bedgraph/Fragment-Fold-Change-30K.bedgr
 ln -f -s "`pwd`/Results/$EPIGENETIC_NAME/Bedgraph/Fragment-P-Value-30K.bedgraph" "CircosAutomation/Data/$CIRCOS_FOLDER"
 ln -f -s "`pwd`/Results/$EPIGENETIC_NAME/Bedgraph/Imprint-Fold-Change.bedgraph" "CircosAutomation/Data/$CIRCOS_FOLDER"
 
+./GeneratePlotEpi.sh "$CIRCOS_FOLDER"
+cp "Output/$CIRCOS_FOLDER"/*.legend.png "../Results/$EPIGENETIC_NAME/"
+
 cd CircosAutomation
-if [ "$COMBINED_NAME" == "" ]
+if [ "$COMBINED_NAME" != "" ]
 then
-    ./GeneratePlotEpi.sh "$CIRCOS_FOLDER"
-    cp "Output/$CIRCOS_FOLDER"/*.legend.png "../Results/$EPIGENETIC_NAME/"
-else
     ./GeneratePlotCombined.sh "$CIRCOS_FOLDER"
     cp "Output/$CIRCOS_FOLDER/"*.legend.png "../Results/$COMBINED_NAME/"
 fi
 cd ..
 
-
+zip -r "$CIRCOS_FOLDER".zip "Results/$EPIGENETIC_NAME/" "Results/$COMBINED_NAME/" "Results/$TRANSCRIPTOMIC_NAME/"

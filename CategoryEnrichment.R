@@ -240,13 +240,18 @@ enrichmentAnalysis <- function(diffExpr, annotations) {
 	repeatClasses <- sub("/.*$", "", gsub("/.*? ", " ", annotations$Fragment_RepeatClass))
     repeatClasses[repeatClasses==""] <- "No_Repeats"
 
+    # Transcription factor binding sites (TFBS) classes.
+    tfClasses <- as.character(annotations$TFBS)
+    tfClasses[tfClasses==""] <- "None"
+    
     # Uncategorized probes must be removed to remove the bias they induce.
 	result <- list(
         GeneRegion=evaluateCategories(geneRegionTypeCategory, "Unknown", annotations, diffExpr),
 		Proximity=evaluateCategories(proximityCategory, "Unknown", annotations, diffExpr),
 		Length=evaluateCategories(lengthCategory, "Unknown", annotations, diffExpr),
 		Density=evaluateCategories(densityCategory, "Unknown", annotations, diffExpr),
-		RepeatClasses=evaluateCategories(repeatClasses, c(), annotations, diffExpr))
+		RepeatClasses=evaluateCategories(repeatClasses, c(), annotations, diffExpr),
+        TFBS=evaluateCategories(tfClasses, "None", annotations, diffExpr))
         
     # Fix names and display orders
     relativeOrders=list(Proximity=c("Open Sea", "CpG Shelf", "CpG Shore", "CpG Islands"),
@@ -254,7 +259,9 @@ enrichmentAnalysis <- function(diffExpr, annotations) {
                         Density=c("No CpG Island","Low Density","Intermediate Density","High Density"),
                         GeneRegion=c("No nearby gene", "Distal Promoter", "Promoter", "Proximal Promoter", "Exonic", "Intronic"),
                         RepeatClasses=c("No Repeats", "SINE", "LINE", "Simple repeat", "LTR", "Low complexity", "DNA"))
-    for(i in names(result)) {
+    
+    # Put everything except TFBS in the correct order for graphical representations.
+    for(i in names(relativeOrders)) {
         rownames(result[[i]]) <- gsub("[-_]", " ", rownames(result[[i]]))
         result[[i]] <- result[[i]][relativeOrders[[i]],]
     }
@@ -655,6 +662,7 @@ doPlots <- function(enrichData, legendName, refCondition, otherCondition, relati
     if(relativeOnly == "") {
         doStackedBarPlot(enrichData, legendName)
         doStackedHyperPlot(enrichData, legendName, refCondition, otherCondition)
+        doRelativeBarPlot(enrichData, legendName)
         doDodgedRelativeHyperPlot(enrichData, legendName, refCondition, otherCondition)
         doRelativeHyperRatioPlot(enrichData, legendName, refCondition, otherCondition)
     }
@@ -691,6 +699,7 @@ plotEnrichmentData <- function(enrich, refCondition, otherCondition, relativeOnl
         ggsave(filename="Repeat enrichment - Absolute bars.png", width=par("din")*1.5)  
     }
 
+    enrich[["TFBS"]] <- NULL
     for(i in 1:length(enrich)) {
         enrich[[i]] <- cbind(enrich[[i]], ColorInfo=ifelse(enrich[[i]][,"Relative Hyper"] < 0, refCondition, otherCondition))
     }

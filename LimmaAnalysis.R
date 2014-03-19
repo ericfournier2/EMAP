@@ -73,17 +73,41 @@ doLimmaAnalysis <- function(targetData, intensityData, foldChangeCutoff, pValueC
 # Outputs the content of a limmaresults object to text files.
 # Arguments:
 #    limmaResults: The result returned by the doLimmaAnalysis function.
-outputLimmaResults <- function(limmaResults) {
-    write.table(cbind(limmaResults$Fit$genes$ID, limmaResults$Fit$coefficients, limmaResults$Fit$p.value),
-            file="LimmaAnalysis.txt", quote=FALSE, col.names=c("Probe", "Fold-change", "P-value"), row.names=FALSE)
-    write.table(limmaResults$DiffExpr, file="DiffExpr.txt", quote=FALSE, row.names=FALSE, col.names=TRUE)
+outputLimmaResults <- function(limmaResults, annotations, reference, otherCondition, categories=NULL) {
+    # Build fit results data-frame and output it.
+    fitData <- cbind(limmaResults$Fit$genes$ID, limmaResults$Fit$coefficients, limmaResults$Fit$p.value)
+    colnames(fitData) <- c("Probe", "Fold-change", "P-value")
+    write.table(fitData, file="LimmaAnalysis.txt", quote=FALSE, col.names=, row.names=FALSE, sep="\t")
+    
+    write.table(limmaResults$DiffExpr, file="DiffExpr.txt", quote=FALSE, row.names=FALSE, col.names=TRUE, sep="\t")
+    
+    # Build normalized result data frame and output it.
     rg <- RG.MA(limmaResults$Norm)
-    write.table(cbind(limmaResults$Norm$gene$ID, limmaResults$Norm$M, limmaResults$Norm$A, rg$R, rg$G),
-                col.names=c("Probe", paste(colnames(limmaResults$Norm$M), "M", sep="."),
+    normData <- cbind(limmaResults$Norm$gene$ID, limmaResults$Norm$M, limmaResults$Norm$A, rg$R, rg$G)
+    colnames(normData) <- c("Probe", paste(colnames(limmaResults$Norm$M), "M", sep="."),
                                      paste(colnames(limmaResults$Norm$A), "A", sep="."),
                                      paste(colnames(rg$R), "R", sep="."),
-                                     paste(colnames(rg$G), "G", sep=".")),
-                file="NormData.txt", quote=FALSE, row.names=FALSE)
+                                     paste(colnames(rg$G), "G", sep="."))
+    write.table(normData, file="NormData.txt", quote=FALSE, row.names=FALSE, sep="\t")
+                
+    aboveBG <- limmaResults$AboveBG$Probes
+    colnames(aboveBG) <- c("ID",
+                           paste("AboveBackground", reference, sep=""),
+                           paste("AboveBackground", otherCondition, sep=""),
+                           paste("AboveBackgroundAll", reference, sep=""),
+                           paste("AboveBackgroundAll", otherCondition, sep=""))
+    write.table(aboveBG, file="AboveBG.txt", quote=FALSE, row.names=FALSE, sep="\t")
+    
+    # Create master output file
+    annMatch <- match(fitData[,1], annotations$Probe)
+    isDiffExpr <- fitData[,1] %in% limmaResults$DiffExpr$ID
+    if(!is.null(categories)) {
+        colnames(categories) <- c("LengthCategory", "DensityCategory", "GeneRegionTypeCategory", "ProximityCategory", "DNA", "LINE", "Low_complexity", "LTR", "No_Repeats", "Simple_repeat", "SINE")
+        masterResults <- cbind(fitData, DifferentiallyExpressed=isDiffExpr, normData[,-1], aboveBG[,-1], annotations[annMatch,-1], categories[annMatch,], stringsAsFactors=FALSE)
+    } else {
+        masterResults <- cbind(fitData, DifferentiallyExpressed=isDiffExpr, normData[,-1], aboveBG[,-1], annotations[annMatch,-1], stringsAsFactors=FALSE)
+    }
+    write.table(masterResults, file="MasterResults.txt", quote=FALSE, row.names=FALSE, sep="\t")
 }
 
 #  Generates a volcano-plot
