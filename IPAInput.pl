@@ -12,7 +12,7 @@ use ReadTable;
 my $annotationPath = $ARGV[0];
 my $limmaPath = $ARGV[1];
 my $annotation = readTable($annotationPath, "\t", "Probe");
-my $limma = readTable($limmaPath, " ", "Probe");
+my $limma = readTable($limmaPath, "\t", "Probe");
 
 # Loop over all annotated probes.
 my $results = {};

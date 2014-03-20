@@ -710,7 +710,7 @@ plotEnrichmentData <- function(enrich, refCondition, otherCondition, relativeOnl
         ggsave(filename="Repeat enrichment - Absolute bars.png", width=par("din")*1.5)  
     }
     
-    setwd("Repeat")
+    setwd("..")
 
     enrich[["TFBS"]] <- NULL
     for(i in 1:length(enrich)) {
