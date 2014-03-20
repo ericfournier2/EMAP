@@ -19,11 +19,11 @@ then
 fi
 
 # Generate both transcriptomic and epigenetic analysis
-#Rscript main.R "$EPIGENETIC_NAME" "$EPIGENETIC_TARGET" "$EPIGENETIC_FOLDER" \
-#               "$TRANSCRIPTOMIC_NAME" "$TRANSCRIPTOMIC_TARGET" "$TRANSCRIPTOMIC_FOLDER" \
-#               "$REFERENCE_CONDITION" "$COMBINED_NAME" $FOLDCHANGE_THRESHOLD $PVALUE_THRESHOLD $VERSION
-#
-#perl IPAInput.pl Annotations/$VERSION/EDMA.Annotation.txt "Results/$EPIGENETIC_NAME/Limma Analysis/LimmaAnalysis.txt" > "Results/$EPIGENETIC_NAME/IPA.txt"
+Rscript main.R "$EPIGENETIC_NAME" "$EPIGENETIC_TARGET" "$EPIGENETIC_FOLDER" \
+               "$TRANSCRIPTOMIC_NAME" "$TRANSCRIPTOMIC_TARGET" "$TRANSCRIPTOMIC_FOLDER" \
+               "$REFERENCE_CONDITION" "$COMBINED_NAME" $FOLDCHANGE_THRESHOLD $PVALUE_THRESHOLD $VERSION
+
+perl IPAInput.pl Annotations/$VERSION/EDMA.Annotation.txt "Results/$EPIGENETIC_NAME/Limma Analysis/LimmaAnalysis.txt" > "Results/$EPIGENETIC_NAME/IPA.txt"
                
 # Create circos input data structure
 NAME_EPI=`sed "s/\//./g" <(echo "$EPIGENETIC_NAME")`
@@ -65,4 +65,4 @@ then
 fi
 cd ..
 
-#zip -r "$CIRCOS_FOLDER".zip "Results/$EPIGENETIC_NAME/" "Results/$COMBINED_NAME/" "Results/$TRANSCRIPTOMIC_NAME/"
+zip -r "$CIRCOS_FOLDER".zip "Results/$EPIGENETIC_NAME/" "Results/$COMBINED_NAME/" "Results/$TRANSCRIPTOMIC_NAME/"
