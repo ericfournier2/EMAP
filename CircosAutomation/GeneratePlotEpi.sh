@@ -27,21 +27,21 @@ sed "1d" "Data/$1/Imprint-Fold-Change.bedgraph" | grep -v -F "NA" | perl Average
 sed "1d" "Data/$1/DiffExpr-P-Value.bedgraph" | sort -k 4nr | head -n 100 > ProcessedData/DiffExpr-P-Value.bedgraph
 
 # Create output directory.
-mkdir -p Output/"$1"
+mkdir -p Output/"$2"
 
 # Replace output file name within configuration file, and make a copy in the output directory.
-sed -e "s/OUTPUT_FILE/$1/g" Input/conf/epi.circos.conf.template > temp
-sed -e "s/PROBE_SUBSET//g" temp > "Output/$1/$1.epi.circos.conf"
-sed -e "s/PROBE_SUBSET/-Significant/g" temp > "Output/$1/$1.epi.circos.sig.conf"
-sed -e "s/PROBE_SUBSET/-30K/g" temp > "Output/$1/$1.epi.circos.30K.conf"
+sed -e "s/OUTPUT_FILE/$2/g" Input/conf/epi.circos.conf.template > temp
+sed -e "s/PROBE_SUBSET//g" temp > "Output/$2/$2.epi.circos.conf"
+sed -e "s/PROBE_SUBSET/-Significant/g" temp > "Output/$2/$2.epi.circos.sig.conf"
+sed -e "s/PROBE_SUBSET/-30K/g" temp > "Output/$2/$2.epi.circos.30K.conf"
 rm temp
 
 # Generate The ciscos plot.
-circos -conf "Output/$1/$1.epi.circos.conf"
-circos -conf "Output/$1/$1.epi.circos.sig.conf"
-circos -conf "Output/$1/$1.epi.circos.30K.conf"
+circos -conf "Output/$2/$2.epi.circos.conf"
+circos -conf "Output/$2/$2.epi.circos.sig.conf"
+circos -conf "Output/$2/$2.epi.circos.30K.conf"
 
 # Add the legend through composition.
-composite -gravity center Input/Epi_Legend.png "Output/$1/$1.png" "Output/$1/$1.legend.png"
-composite -gravity center Input/Epi_Legend_Significant.png "Output/$1/$1-Significant.png" "Output/$1/$1-Significant.legend.png"
-composite -gravity center Input/Epi_Legend_Significant.png "Output/$1/$1-30K.png" "Output/$1/$1-30K.legend.png"
+composite -gravity center Input/Epi_Legend.png "Output/$2/$2.png" "Output/$2/$2.legend.png"
+composite -gravity center Input/Epi_Legend_Significant.png "Output/$2/$2-Significant.png" "Output/$2/$2-Significant.legend.png"
+composite -gravity center Input/Epi_Legend_Significant.png "Output/$2/$2-30K.png" "Output/$2/$2-30K.legend.png"

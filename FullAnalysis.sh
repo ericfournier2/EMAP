@@ -19,18 +19,20 @@ then
 fi
 
 # Generate both transcriptomic and epigenetic analysis
-Rscript main.R "$EPIGENETIC_NAME" "$EPIGENETIC_TARGET" "$EPIGENETIC_FOLDER" \
-               "$TRANSCRIPTOMIC_NAME" "$TRANSCRIPTOMIC_TARGET" "$TRANSCRIPTOMIC_FOLDER" \
-               "$REFERENCE_CONDITION" "$COMBINED_NAME" $FOLDCHANGE_THRESHOLD $PVALUE_THRESHOLD $VERSION
-
-perl IPAInput.pl Annotations/$VERSION/EDMA.Annotation.txt "Results/$EPIGENETIC_NAME/Limma Analysis/LimmaAnalysis.txt" > "Results/$EPIGENETIC_NAME/IPA.txt"
+#Rscript main.R "$EPIGENETIC_NAME" "$EPIGENETIC_TARGET" "$EPIGENETIC_FOLDER" \
+#               "$TRANSCRIPTOMIC_NAME" "$TRANSCRIPTOMIC_TARGET" "$TRANSCRIPTOMIC_FOLDER" \
+#               "$REFERENCE_CONDITION" "$COMBINED_NAME" $FOLDCHANGE_THRESHOLD $PVALUE_THRESHOLD $VERSION
+#
+#perl IPAInput.pl Annotations/$VERSION/EDMA.Annotation.txt "Results/$EPIGENETIC_NAME/Limma Analysis/LimmaAnalysis.txt" > "Results/$EPIGENETIC_NAME/IPA.txt"
                
 # Create circos input data structure
-CIRCOS_FOLDER=`sed "s/\//./g" <(echo "$EPIGENETIC_NAME")`
+NAME_EPI=`sed "s/\//./g" <(echo "$EPIGENETIC_NAME")`
+CIRCOS_FOLDER=$NAME_EPI
 
 if [ "$COMBINED_NAME" != "" ]
 then
-   CIRCOS_FOLDER=`sed "s/\//./g" <(echo "$COMBINED_NAME")`
+   NAME_COMBI=`sed "s/\//./g" <(echo "$COMBINED_NAME")`
+   CIRCOS_FOLDER=$NAME_COMBI
    mkdir -p "CircosAutomation/Data/$CIRCOS_FOLDER"
    
    ln -f -s "`pwd`/Results/$TRANSCRIPTOMIC_NAME/Trans-FC.bedgraph" "CircosAutomation/Data/$CIRCOS_FOLDER"
@@ -51,15 +53,16 @@ ln -f -s "`pwd`/Results/$EPIGENETIC_NAME/Bedgraph/Fragment-Fold-Change-30K.bedgr
 ln -f -s "`pwd`/Results/$EPIGENETIC_NAME/Bedgraph/Fragment-P-Value-30K.bedgraph" "CircosAutomation/Data/$CIRCOS_FOLDER"
 ln -f -s "`pwd`/Results/$EPIGENETIC_NAME/Bedgraph/Imprint-Fold-Change.bedgraph" "CircosAutomation/Data/$CIRCOS_FOLDER"
 
-./GeneratePlotEpi.sh "$CIRCOS_FOLDER"
-cp "Output/$CIRCOS_FOLDER"/*.legend.png "../Results/$EPIGENETIC_NAME/"
-
 cd CircosAutomation
+
+./GeneratePlotEpi.sh "$CIRCOS_FOLDER" "$NAME_EPI"
+cp "Output/$NAME_EPI"/*.legend.png "../Results/$EPIGENETIC_NAME/"
+
 if [ "$COMBINED_NAME" != "" ]
 then
-    ./GeneratePlotCombined.sh "$CIRCOS_FOLDER"
-    cp "Output/$CIRCOS_FOLDER/"*.legend.png "../Results/$COMBINED_NAME/"
+    ./GeneratePlotCombined.sh "$CIRCOS_FOLDER" "$NAME_COMBI"
+    cp "Output/$NAME_COMBI/"*.legend.png "../Results/$COMBINED_NAME/"
 fi
 cd ..
 
-zip -r "$CIRCOS_FOLDER".zip "Results/$EPIGENETIC_NAME/" "Results/$COMBINED_NAME/" "Results/$TRANSCRIPTOMIC_NAME/"
+#zip -r "$CIRCOS_FOLDER".zip "Results/$EPIGENETIC_NAME/" "Results/$COMBINED_NAME/" "Results/$TRANSCRIPTOMIC_NAME/"
