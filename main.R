@@ -72,11 +72,11 @@ writeEnrichmentData <- function(enrich, folder, relativeOnly) {
                          "p-value-high-fdr"=p.adjust(enrich$TFBS$"p-value-high", method="fdr"))
     
     # Write out the raw enrichment data.
-    write.table(enrich$GeneRegion, file="Enrichment - Gene Regions.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
-    write.table(enrich$Proximity, file="Enrichment - CpG Proximity.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
-    write.table(enrich$Length, file="Enrichment - CpG Length.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
-    write.table(enrich$Density, file="Enrichment - CpG Density.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
-    write.table(enrich$RepeatClasses, file="Enrichment - Repeat Classes.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
+    write.table(enrich$GeneRegion, file="Genic region/Enrichment - Gene Regions.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
+    write.table(enrich$Proximity, file="Distance from CpG Island/Enrichment - CpG Proximity.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
+    write.table(enrich$Length, file="CpG Island Length/Enrichment - CpG Length.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
+    write.table(enrich$Density, file="CpG Island Density/Enrichment - CpG Density.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
+    write.table(enrich$RepeatClasses, file="Repeat/Enrichment - Repeat Classes.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
     write.table(enrich$TFBS, file="Enrichment - TFBS.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
 
     setwd(previousWD)
@@ -122,7 +122,7 @@ if(epigenetic_Name!="") {
     # Output results of the limma analysis
     dir.create("Limma Analysis", showWarnings=FALSE, recursive=TRUE)
     setwd("Limma Analysis")
-    outputLimmaResults(limmaResults, annotation, reference_Condition, otherCondition, categories=categories)
+    outputLimmaResults(limmaResults, annotation, categories, reference_Condition, otherCondition)
     generateVolcanoPlot(limmaResults$Fit, foldchange_Threshold, pvalue_Threshold, epigeneticsData$Target, reference_Condition, "Hyper-methylated")
     generateAboveBackgroundPlots(epigeneticsData, limmaResults, reference_Condition)
     setwd("..")
@@ -159,8 +159,6 @@ if(transcriptomic_Name!="") {
     # Load transcriptomic data and probe positions. 
     transcriptomicsData <- loadData(transcriptomic_Folder, transcriptomic_Target)
     bedTrans <- read.table(file.path(annotationFolder, "BestEMBV3.bed"), sep="\t", col.names=c("BEDChromosome", "Start", "End", "Probe"))
-    otherCondition <- getOtherCondition(transcriptomicsData$Target, reference_Condition)
-    annotationTrans <- read.table("Annotations/EMBV3.annotation_table_2.xls", header=TRUE, sep="\t", quote="")
 
     # Move into output directory
     dir.create(file.path("Results", transcriptomic_Name), showWarnings=FALSE, recursive=TRUE)
@@ -171,7 +169,7 @@ if(transcriptomic_Name!="") {
     limmaResultsTrans <- doLimmaAnalysis(transcriptomicsData$Target, transcriptomicsData$IntensityData, foldchange_Threshold, pvalue_Threshold, reference_Condition)
 
     # Output limma results.
-    outputLimmaResults(limmaResultsTrans, annotationTrans, reference_Condition, otherCondition)
+    outputLimmaResults(limmaResultsTrans)
     generateVolcanoPlot(limmaResultsTrans$Fit, foldchange_Threshold, pvalue_Threshold, epigeneticsData$Target, reference_Condition, "Over-expressed")
     
     
@@ -206,8 +204,8 @@ if(epigenetic_Name!="" && transcriptomic_Name!="") {
     # Match epigenetic probes to their annotation, and obtain numerical data which is in the same
     # order as the annotations.
     annToInt <- match(annotation$Probe,  epigeneticsData$IntensityData$genes$ID)
-#    allMeans <- apply(cbind(epigeneticsData$IntensityData$R, epigeneticsData$IntensityData$G), 1, mean)
-#    matchedInt <- allMeans[annToInt]
+    allMeans <- apply(cbind(epigeneticsData$IntensityData$R, epigeneticsData$IntensityData$G), 1, mean)
+    matchedInt <- allMeans[annToInt]
     matchedFC <- limmaResults$Fit$coefficients[annToInt]
     matchedP <- limmaResults$Fit$p.value[annToInt]
 
@@ -219,7 +217,7 @@ if(epigenetic_Name!="" && transcriptomic_Name!="") {
       ((matchedFC*limmaResultsTrans$Fit$coefficients[epiToTransMatch])<0)
 
     # Remove NAs and keep only relevant rows
-    concordant <- annotation[which(indices),, drop=FALSE]
+    concordant <- annotation[which(indices),]
 
     # Get single, most relevant gene name:
     # Paste together all gene symbols in order of importance. Detect exon/intron by their 
@@ -238,10 +236,10 @@ if(epigenetic_Name!="" && transcriptomic_Name!="") {
                               geneName)
 
     # Remove entries without gene names in the Exon/Intron/Promoter part.
-    concordantLabels <- concordantLabels[concordantLabels[,4]!="",, drop=FALSE]
+    concordantLabels <- concordantLabels[concordantLabels[,4]!="",]
 
     # Remove duplicate gene names.
-    concordantLabels <- concordantLabels[!duplicated(concordantLabels[,4]),, drop=FALSE]
+    concordantLabels <- concordantLabels[!duplicated(concordantLabels[,4]),]
 
     # Write out the table.                          
     dir.create(file.path("Results", combined_Name), showWarnings=FALSE, recursive=TRUE)

@@ -659,24 +659,35 @@ doCombinedRelativeBarPlot <- function(enrichDFList, columnNames, plotName, topLa
 
 # Generate both a stacked bar plot and a relative bar plot for a set of data.
 doPlots <- function(enrichData, legendName, refCondition, otherCondition, relativeOnly) {
-    if(relativeOnly == "") {
-        doStackedBarPlot(enrichData, legendName)
-        doStackedHyperPlot(enrichData, legendName, refCondition, otherCondition)
-        doRelativeBarPlot(enrichData, legendName)
-        doDodgedRelativeHyperPlot(enrichData, legendName, refCondition, otherCondition)
-        doRelativeHyperRatioPlot(enrichData, legendName, refCondition, otherCondition)
-    }
+    # Create output directory for this enrichment category, and move into it.
+    dir.create(legendName, showWarnings=FALSE, recursive=TRUE)
+    setwd(legendName)   
+
+    # Generate the plots.
+    doStackedBarPlot(enrichData, legendName)
+    doStackedHyperPlot(enrichData, legendName, refCondition, otherCondition)
+    doRelativeBarPlot(enrichData, legendName)
+    doDodgedRelativeHyperPlot(enrichData, legendName, refCondition, otherCondition)
+    doRelativeHyperRatioPlot(enrichData, legendName, refCondition, otherCondition)
+    
+    # Move back to the enrichment directory.
+    setwd("..")
 }
 
 # Plot all enrichment categories using stacked and side-by-side bars.
 plotEnrichmentData <- function(enrich, refCondition, otherCondition, relativeOnly="") {
     # Plot all data types.
-    doPlots(enrich$Proximity, "Distance from CpG Island", refCondition, otherCondition, relativeOnly)
-    doPlots(enrich$Length, "CpG Island Length", refCondition, otherCondition, relativeOnly)
-    doPlots(enrich$Density, "CpG Island Density", refCondition, otherCondition, relativeOnly)
-    doPlots(enrich$GeneRegion, "Genic region", refCondition, otherCondition, relativeOnly)
+    if(relativeOnly == "") {
+        doPlots(enrich$Proximity, "Distance from CpG Island", refCondition, otherCondition, relativeOnly)
+        doPlots(enrich$Length, "CpG Island Length", refCondition, otherCondition, relativeOnly)
+        doPlots(enrich$Density, "CpG Island Density", refCondition, otherCondition, relativeOnly)
+        doPlots(enrich$GeneRegion, "Genic region", refCondition, otherCondition, relativeOnly)
+    }
                 
     # Do the two graphs that can be directly applied to repeats:
+    dir.create("Repeat", showWarnings=FALSE, recursive=TRUE)
+    setwd("Repeat") 
+    
     doRelativeBarPlot(enrich$RepeatClasses,  "Repeat", relativeOnly)    
     if(relativeOnly == "") {
         doStackedHyperPlot(enrich$RepeatClasses, "Repeat",  refCondition, otherCondition)
@@ -698,6 +709,8 @@ plotEnrichmentData <- function(enrich, refCondition, otherCondition, relativeOnl
             scale_fill_manual(values=c("#FFCC00", "#3399FF"))
         ggsave(filename="Repeat enrichment - Absolute bars.png", width=par("din")*1.5)  
     }
+    
+    setwd("Repeat")
 
     enrich[["TFBS"]] <- NULL
     for(i in 1:length(enrich)) {
