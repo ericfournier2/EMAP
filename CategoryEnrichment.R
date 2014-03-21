@@ -362,7 +362,7 @@ appendAllRow <- function(enrichData) {
 doStackedBarPlot <- function(enrichData, legendName) {
     dataDF <- mapToDataFrame(enrichData, 
                              c("Proportion within\nall EDMA probes"="% of possible successes",
-                               "Proportion within\ndifferentially methylated probes"="% of successes"))
+                               "Proportion within\nselected probes"="% of successes"))
                               
     mData <- melt(dataDF, id.vars="Category", variable.name="Type", value.name="Value")
     
@@ -375,7 +375,7 @@ doStackedBarPlot <- function(enrichData, legendName) {
                axis.text = element_text(colour="black")) +                   # Set the axis text to black rather than grey.
         scale_fill_manual(name=legendName, breaks=rev(rownames(enrichData)), # Set legend order so it corresponds to the stacked block order.
                           values=colorVector)                                # Set legend colors.
-    ggsave(filename=paste(legendName, "enrichment - Stacked.png"),
+    ggsave(filename=paste(legendName, " - Absolute proportions of selected probes.png"),
            width=7, height=7, units="in")                                   # Save plot to file.
 }
 
@@ -434,7 +434,7 @@ doHyperPlot <- function(enrichData, categoryNames, legendName, otherCondition) {
         scale_fill_manual(values=colorVector) +                                  # Set colors
         coord_flip()                                                             # Turn graphic sideways.
 
-    ggsave(filename=paste(legendName, "enrichment - Hypermethylation.png"),
+    ggsave(filename=paste(legendName, " - Hypermethylation.png"),
            width=7, height=7, units="in")
 }
 
@@ -453,13 +453,13 @@ doStackedHyperPlot <- function(enrichData, legendName, refCondition, otherCondit
         geom_bar(stat="identity", colour="black") +                              # Set type (bars)
         geom_hline(yintercept=enrichData[,"% HyperAll"][1], linetype="dotted") + # Dotted line on "All" level.
         ylim(c(0,1.0000001)) +                                                   # Always go from 0% to 100%. Add a tiny bit for imprecisions due to rounding.
-        labs(x="", y="Proportion of DMRs which are hyper-methylated") +          # Set axis labels
+        labs(x="", y="Proportion of selected probes which are hyper-methylated") +          # Set axis labels
         theme( panel.grid.major.x = element_blank(),                             # Remove x grid lines
                axis.text = element_text(colour="black", size=14)) +              # Set axis text to black
         scale_fill_manual(values=getTwoColorVector(refCondition, otherCondition)) +                          # Set colors
         coord_flip()                                                             # Turn graphic sideways.
 
-    ggsave(filename=paste(legendName, "enrichment - Hypermethylation Stacked.png"),
+    ggsave(filename=paste(legendName, " - Absolute proportions of hypermethylated elements within selected probes.png"),
            width=7, height=7, units="in")
 }
 
@@ -474,13 +474,13 @@ doDodgedRelativeHyperPlot <- function(enrichData, legendName, refCondition, othe
     ggplot(hyperDF, aes(x=Category, y=Hyper, fill=Tissue)) +                     # Set data
         geom_bar(stat="identity", colour="black", position="dodge") +            # Set type (bars)
         geom_hline(yintercept=0, linetype="solid", size=1) +
-        labs(x="", y="log2(Enrichment ratio for hypermethylated DMRs)") +        # Set axis labels
+        labs(x="", y="log2(Enrichment ratio)") +        # Set axis labels
         theme( panel.grid.major.x = element_blank(),                             # Remove x grid lines
                axis.text = element_text(colour="black", size=14)) +              # Set axis text to black
         scale_fill_manual(values=getTwoColorVector(refCondition, otherCondition)) +                      # Set colors
         coord_flip()                                                             # Turn graphic sideways.
 
-    ggsave(filename=paste(legendName, "enrichment - Hypermethylation Relative.png"),
+    ggsave(filename=paste(legendName, " - Per-tissue enrichment ratios of hypermethylated elements within selected probes.png"),
            width=7, height=7, units="in")
 }
 
@@ -596,7 +596,7 @@ doRelativeBarPlot <- function(enData, plotName, relativeOnly="", singleColor=FAL
                        paste("Higher odds\nof methylation\nin", relativeOnly))
     }
                                 
-    doRelativePlot(enrichPercent, topLabels, paste(plotName, "enrichment - Relative.png"), 0, FALSE, singleColor)                                
+    doRelativePlot(enrichPercent, topLabels, paste(plotName, " - Enrichment ratios of selected probes.png"), 0, FALSE, singleColor)                                
     
     return(enrichPercent)
 }
@@ -614,7 +614,7 @@ doRelativeHyperRatioPlot <- function(enData, plotName, refCondition, otherCondit
     enrichPercent <- mapToDataFrame(enData, c(EnrichPercent="Relative Hyper", Count="Relative Hyper Count"), TRUE, FALSE)
 
     topLabels <- getHyperMethylationLabels(refCondition, otherCondition)
-    fullName <-  paste(plotName, "enrichment - Relative Hypermethylation.png")
+    fullName <-  paste(plotName, " - Enrichment ratios of hypermethylated elements within selected probes.png")
                                
     doRelativePlot(enrichPercent, topLabels, fullName, enrichPercent$EnrichPercent[enrichPercent$Category=="All"], appendWhite=TRUE, singleColor)
                                
@@ -653,7 +653,7 @@ doCombinedRelativeBarPlot <- function(enrichDFList, columnNames, plotName, topLa
 #        singleColor <- FALSE
 #    }
     
-    doRelativePlot(enrichPercent, topLabels,  paste(plotName, "enrichment - Combined Relative Hypermethylation.png"),
+    doRelativePlot(enrichPercent, topLabels,  paste(plotName, " - Combined enrichment.png"),
                    baseline, appendWhite=FALSE, singleColor=TRUE, combined=TRUE, colorColumn="", showCount=showCount)
 }
 
@@ -716,8 +716,8 @@ plotEnrichmentData <- function(enrich, refCondition, otherCondition, relativeOnl
     for(i in 1:length(enrich)) {
         enrich[[i]] <- cbind(enrich[[i]], ColorInfo=ifelse(enrich[[i]][,"Relative Hyper"] < 0, refCondition, otherCondition))
     }
-    doCombinedRelativeBarPlot(enrich, c("Relative Hyper", "Relative Hyper Count"), "DMRs", getHyperMethylationLabels(refCondition, otherCondition), TRUE, "ColorInfo")
-    doCombinedRelativeBarPlot(enrich, c("Relative DMR", "Relative DMR Count"), "Hypermethylation", getDMREnrichmentLabels(), showCount=FALSE)
+    doCombinedRelativeBarPlot(enrich, c("Relative Hyper", "Relative Hyper Count"), "Selected probes", getHyperMethylationLabels(refCondition, otherCondition), TRUE, "ColorInfo")
+    doCombinedRelativeBarPlot(enrich, c("Relative DMR", "Relative DMR Count"), "Hypermethylation within selected probes", getDMREnrichmentLabels(), showCount=FALSE)
 }
 
 
