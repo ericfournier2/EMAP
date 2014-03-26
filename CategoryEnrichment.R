@@ -491,7 +491,8 @@ doRelativePlot <- function(enrichPercent, topLabels, plotName, baseline=0, appen
     # of probes in the array, IE, it can only occur when comparing proportions
     # of hypermethylated probes. In such case, it is reasonable to "cap" the enrichment
     # ratio at -5 to represent -Inf.
-    enrichPercent$EnrichPercent[enrichPercent$EnrichPercent==-Inf]   <- -5
+    enrichPercent$EnrichPercent[enrichPercent$EnrichPercent==-Inf]  <- -5
+    enrichPercent$EnrichPercent[enrichPercent$EnrichPercent==Inf]   <- 5
     
     # This occurs when 0 is divided by 0, and thus can only occur during hypermethylation
     # analysis. If both sides have 0 hypermethylated probes, neither side can be considered,
