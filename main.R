@@ -14,11 +14,22 @@ if(!exists("epigenetic_Name")) {
     
     combined_Name <- parameters[8]
     
-    foldchange_Threshold <- log2(as.numeric(parameters[9]))
-    pvalue_Threshold <- as.numeric(parameters[10])
-    if(length(parameters) > 10) {
+    epi_foldchange_Threshold <- log2(as.numeric(parameters[9]))
+    epi_pvalue_Threshold <- as.numeric(parameters[10])
+    
+	trans_foldchange_Threshold <- epi_foldchange_Threshold
+	trans_pvalue_Threshold <- epi_pvalue_Threshold
+	
+	if(length(parameters) == 11) {
         VERSION <- parameters[11]
-    }
+    } else if(length(parameters)==12) {
+		trans_foldchange_Threshold <- log2(as.numeric(parameters[11]))
+		trans_pvalue_Threshold <- as.numeric(parameters[12])
+	} else if(length(parameters)==13) {
+		trans_foldchange_Threshold <- log2(as.numeric(parameters[11]))
+		trans_pvalue_Threshold <- as.numeric(parameters[12])
+		VERSION <- parameters[13]
+	}
 }
 
 # There are only a handful of v1 project so by default, if those projects didn't
@@ -110,7 +121,7 @@ if(epigenetic_Name!="") {
     setwd(file.path("Results", epigenetic_Name))
 
     # Do the differential expression analysis					   
-    limmaResults <- doLimmaAnalysis(epigeneticsData$Target, epigeneticsData$IntensityData, foldchange_Threshold, pvalue_Threshold, reference_Condition)
+    limmaResults <- doLimmaAnalysis(epigeneticsData$Target, epigeneticsData$IntensityData, epi_foldchange_Threshold, epi_pvalue_Threshold, reference_Condition)
     
     # Generate QC plots
     dir.create("QC plots", showWarnings=FALSE, recursive=TRUE)
@@ -132,14 +143,14 @@ if(epigenetic_Name!="") {
     dir.create("Limma Analysis", showWarnings=FALSE, recursive=TRUE)
     setwd("Limma Analysis")
     outputLimmaResults(limmaResults, annotation, reference_Condition, otherCondition, categories=categories)
-    generateVolcanoPlot(limmaResults$Fit, foldchange_Threshold, pvalue_Threshold, epigeneticsData$Target, reference_Condition, "Hyper-methylated")
+    generateVolcanoPlot(limmaResults$Fit, epi_foldchange_Threshold, epi_pvalue_Threshold, epigeneticsData$Target, reference_Condition, "Hyper-methylated")
     generateAboveBackgroundPlots(epigeneticsData, limmaResults, reference_Condition)
     setwd("..")
 
     # Generate bedgraph files.
     dir.create("Bedgraph", showWarnings=FALSE, recursive=TRUE)
     setwd("Bedgraph")    
-    generateBedGraphs(limmaResults, epigeneticsData$Target, annotation, foldchange_Threshold, pvalue_Threshold)
+    generateBedGraphs(limmaResults, epigeneticsData$Target, annotation, epi_foldchange_Threshold, epi_pvalue_Threshold)
     setwd("..")
     
     # Perform enrichment analysis.
@@ -176,27 +187,28 @@ if(transcriptomic_Name!="") {
     setwd(file.path("Results", transcriptomic_Name))
 
     # Do limma analysis
-    limmaResultsTrans <- doLimmaAnalysis(transcriptomicsData$Target, transcriptomicsData$IntensityData, foldchange_Threshold, pvalue_Threshold, reference_Condition)
+    limmaResultsTrans <- doLimmaAnalysis(transcriptomicsData$Target, transcriptomicsData$IntensityData, trans_foldchange_Threshold, trans_pvalue_Threshold, reference_Condition)
 
     # Output limma results.
     outputLimmaResults(limmaResultsTrans, annotationTrans, reference_Condition, otherCondition)
-    generateVolcanoPlot(limmaResultsTrans$Fit, foldchange_Threshold, pvalue_Threshold, epigeneticsData$Target, reference_Condition, "Over-expressed")
+    generateVolcanoPlot(limmaResultsTrans$Fit, trans_foldchange_Threshold, trans_pvalue_Threshold, transcriptomicsData$Target, reference_Condition, "Over-expressed")
     
     
     # Get positionned and ordered transcriptomic data.
-    posTransData <- cbind(limmaResultsTrans$Fit$genes$ID,
-                          limmaResultsTrans$Fit$p.value,
-                          limmaResultsTrans$Fit$coefficients,
+    posTransData <- cbind(ID=limmaResultsTrans$Fit$genes$ID,
+                          PVal=-log10(limmaResultsTrans$Fit$p.value),
+                          FC=limmaResultsTrans$Fit$coefficients,
                           bedTrans[match(limmaResultsTrans$Fit$genes$ID, bedTrans[,4]), 1:3])
     posTransData <- posTransData[order(posTransData$BEDChromosome, posTransData$Start),]
                           
     # Generate p-value, Fold-change bedgraph files.
-    generateBedGraph(posTransData[!is.na(posTransData$BEDChromosome),c("BEDChromosome", "Start", "End", "limmaResultsTrans$Fit$p.value")], "Trans-P-Value")
-    generateBedGraph(posTransData[!is.na(posTransData$BEDChromosome),c("BEDChromosome", "Start", "End", "limmaResultsTrans$Fit$coefficients")], "Trans-FC") 
+    generateBedGraph(posTransData[!is.na(posTransData$BEDChromosome),c("BEDChromosome", "Start", "End", "PVal")], "Trans-P-Value")
+    generateBedGraph(posTransData[!is.na(posTransData$BEDChromosome),c("BEDChromosome", "Start", "End", "FC")], "Trans-FC") 
 
     # Generate differentially expressed circos track.
-    posTransData <- posTransData[(posTransData[,2] < pvalue_Threshold) & (abs(posTransData[,3]) > foldchange_Threshold),]
-    diffExprTrans <- cbind(posTransData[,c("BEDChromosome", "Start", "End", "limmaResultsTrans$Fit$p.value"),],
+    #posTransData <- posTransData[(posTransData$PVal < -log10(trans_pvalue_Threshold)) & (abs(posTransData$FC) > trans_foldchange_Threshold),]
+	posTransData <- posTransData[posTransData$ID %in% limmaResultsTrans$DiffExpr$ID,]
+    diffExprTrans <- cbind(posTransData[,c("BEDChromosome", "Start", "End", "PVal"),],
                            ifelse(posTransData[,3]<0, "color=red,angle_shift=180", "color=green"))
     generateBedGraph(diffExprTrans, "DiffExpr-P-Value-Trans")
 
@@ -220,10 +232,10 @@ if(epigenetic_Name!="" && transcriptomic_Name!="") {
     matchedP <- limmaResults$Fit$p.value[annToInt]
 
     # Find genes whose methylation/expression go up/down or down/up at the same time.
-    indices <- (abs(matchedFC)> foldchange_Threshold) &
-      (abs(limmaResultsTrans$Fit$coefficients[epiToTransMatch]) > foldchange_Threshold) &
-      (matchedP < pvalue_Threshold) &
-      (limmaResultsTrans$Fit$p.value[epiToTransMatch] < pvalue_Threshold) &
+    indices <- (abs(matchedFC)> epi_foldchange_Threshold) &
+      (abs(limmaResultsTrans$Fit$coefficients[epiToTransMatch]) > trans_foldchange_Threshold) &
+      (matchedP < epi_pvalue_Threshold) &
+      (limmaResultsTrans$Fit$p.value[epiToTransMatch] < trans_pvalue_Threshold) &
       ((matchedFC*limmaResultsTrans$Fit$coefficients[epiToTransMatch])<0)
 
     # Remove NAs and keep only relevant rows

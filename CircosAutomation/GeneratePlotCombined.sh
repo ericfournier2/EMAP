@@ -21,8 +21,8 @@ do
 done
 
 # Process DiffExpr values for scatterplot.
-sed "1d" "Data/$1/DiffExpr-P-Value.bedgraph" | sort -k 4nr | head -n 100 > ProcessedData/DiffExpr-P-Value.bedgraph
-sed "1d" "Data/$1/DiffExpr-P-Value-Trans.bedgraph" | sort -k 4nr | head -n 100 > ProcessedData/DiffExpr-P-Value-Trans.bedgraph
+sed "1d" "Data/$1/DiffExpr-P-Value.bedgraph" | sort -k 4nr | head -n 200 > ProcessedData/DiffExpr-P-Value.bedgraph
+sed "1d" "Data/$1/DiffExpr-P-Value-Trans.bedgraph" | sort -k 4nr | head -n 200 > ProcessedData/DiffExpr-P-Value-Trans.bedgraph
 
 # Copy "Concordant" text file.
 cp Data/"$1"/Concordant.txt ProcessedData/Concordant.txt

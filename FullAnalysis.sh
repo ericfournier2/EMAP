@@ -65,4 +65,9 @@ then
 fi
 cd ..
 
-zip -r "$CIRCOS_FOLDER".zip "Results/$EPIGENETIC_NAME/" "Results/$COMBINED_NAME/" "Results/$TRANSCRIPTOMIC_NAME/"
+if [ "$COMBINED_NAME" != "" ]
+then
+	zip -r "$CIRCOS_FOLDER".zip "Results/$EPIGENETIC_NAME/" "Results/$COMBINED_NAME/" "Results/$TRANSCRIPTOMIC_NAME/"
+else
+	zip -r "$CIRCOS_FOLDER".zip "Results/$EPIGENETIC_NAME/"
+fi

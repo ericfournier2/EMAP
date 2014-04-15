@@ -123,7 +123,7 @@ generateVolcanoPlot <- function(fitData, foldchange_Threshold, pvalue_Threshold,
     numHyper <- sum(belowPValue & (fitData$coefficients >= foldchange_Threshold) , na.rm=TRUE)
     
     # Get the name of the condition which is not the reference.
-    nonRefCondition <- setdiff(unique(c(epigeneticsData$Target$Cy3, epigeneticsData$Target$Cy5)), reference_Condition)
+    nonRefCondition <- setdiff(unique(c(target$Cy3, target$Cy5)), reference_Condition)
     
     # Build the data frame.
     volcanoDF <- data.frame(FoldChange=fitData$coefficients,
