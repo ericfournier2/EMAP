@@ -35,3 +35,23 @@ loadData <- function(dataPath, targetName) {
 
     return(list(Target=targets, IntensityData=intensityData))
 }
+
+# Detects cases where the entries within the input files are unaligned,
+# which will cause limma to assign intensity values to the wrong probes.
+performSanityCheck <- function(dataObject, dataFolder) {
+    # Sanity check
+    allData <- list()
+    for(i in dataObject$Target$Filename) {
+        allData[[i]] <- read.table(file.path(dataFolder, i), header=TRUE, sep="\t")
+    }
+
+    hasError <- FALSE
+    for(i in 2:length(allData)) {
+        if(any(allData[[1]]$ID!=allData[[i]]$ID)) {
+            write(paste("Mismatch between", names(allData)[1], "and", names(allData)[i]), stderr())
+            hasError <- TRUE
+        }
+    }
+    
+    return(hasError);
+}

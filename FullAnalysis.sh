@@ -22,7 +22,14 @@ fi
 Rscript main.R "$EPIGENETIC_NAME" "$EPIGENETIC_TARGET" "$EPIGENETIC_FOLDER" \
                "$TRANSCRIPTOMIC_NAME" "$TRANSCRIPTOMIC_TARGET" "$TRANSCRIPTOMIC_FOLDER" \
                "$REFERENCE_CONDITION" "$COMBINED_NAME" $FOLDCHANGE_THRESHOLD $PVALUE_THRESHOLD $VERSION
-
+rc=$?
+if [[ $rc != 0 ]]
+then
+    echo "main.R exited with error code "$rc". Aborting."
+    exit $rc
+fi
+               
+               
 perl IPAInput.pl Annotations/$VERSION/EDMA.Annotation.txt "Results/$EPIGENETIC_NAME/Limma Analysis/LimmaAnalysis.txt" > "Results/$EPIGENETIC_NAME/IPA.txt"
                
 # Create circos input data structure

@@ -1,5 +1,14 @@
 # Main analysis file for epigenetic analysis.
 
+# Define error codes
+ERROR_UNKNOWN <- 1
+ERROR_INVALID_EPIGENETIC_FORMAT <- 2
+ERROR_INVALID_TRANSCRIPTOMIC_FORMAT <- 3
+
+# Enable printing of the stack on error.
+options(error= function() { traceback(2); quit(save="no", status=ERROR_UNKNOWN)})
+
+# Parse command line arguments if values were not provided through an OPEN_ME script.
 if(!exists("epigenetic_Name")) {
     parameters <- commandArgs(trailingOnly = TRUE)
     epigenetic_Name <- parameters[1]
@@ -110,6 +119,9 @@ divergentScalePath <- file.path(getwd(), "Annotations", "DivergenceScaleNoLabel.
 if(epigenetic_Name!="") {
     # Load epigenetic data and annotations.
     epigeneticsData <- loadData(epigenetic_Folder, epigenetic_Target)
+    if(!sanityCheck(epigeneticsData, epigenetic_Folder)) {
+        quit(save="no", status=2) {
+    }
     otherCondition <- getOtherCondition(epigeneticsData$Target, reference_Condition)
 
     annotation <- read.table(file.path(annotationFolder, "EDMA.Annotation.txt"), header=TRUE, sep="\t")
@@ -177,6 +189,9 @@ if(epigenetic_Name!="") {
 if(transcriptomic_Name!="") {
     # Load transcriptomic data and probe positions. 
     transcriptomicsData <- loadData(transcriptomic_Folder, transcriptomic_Target)
+    if(!sanityCheck(transcriptomicsData, transcriptomic_Folder)) {
+        quit(save="no", status=3) {
+    }
     bedTrans <- read.table(file.path(annotationFolder, "BestEMBV3.bed"), sep="\t", col.names=c("BEDChromosome", "Start", "End", "Probe"))
     otherCondition <- getOtherCondition(transcriptomicsData$Target, reference_Condition)
     annotationTrans <- read.table("Annotations/EMBV3.annotation_table_2.xls", header=TRUE, sep="\t", quote="")
