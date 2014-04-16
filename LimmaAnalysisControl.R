@@ -10,10 +10,7 @@
 #      Norm:     Normalized intensity data.
 #      Fit:      Linear fit data.
 #      DiffExpr: List of differentially expressed genes.
-doLimmaAnalysis <- function(targetData, intensityData, foldChangeCutoff, pValueCutoff, refCondition) {
-	cond1 <- targetData$Cy5[1]
-	cond2 <- targetData$Cy3[1]
-	
+doLimmaAnalysisControl <- function(targetData, intensityData, foldChangeCutoff, pValueCutoff, refCondition) {
     refCond <- refCondition
     if(is.na(refCondition) || refCondition=="") {
         refCond <- targetData$Cy5[1]

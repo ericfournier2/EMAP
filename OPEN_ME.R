@@ -42,8 +42,12 @@ reference_Condition <- "Embryo"
 combined_Name <- " Sperm"
 
 # 9. Set thresholds for significance.
-foldchange_Threshold <- log2(1.5)
-pvalue_Threshold <- 0.05
+epi_foldchange_Threshold <- log2(1.5)
+epi_pvalue_Threshold <- 0.05
+
+trans_foldchange_Threshold <- log2(1.5)
+trans_pvalue_Threshold <- 0.05
+
 
 # 10. If you have been using the beta version  of the chip (with probe names GT_HQ...), change
 #     this to "v1". Otherwise (if the probe names are EDMA_MET...), keep this set as "v2".

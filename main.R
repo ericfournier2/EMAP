@@ -4,6 +4,7 @@
 ERROR_UNKNOWN <- 1
 ERROR_INVALID_EPIGENETIC_FORMAT <- 2
 ERROR_INVALID_TRANSCRIPTOMIC_FORMAT <- 3
+ERROR_INVALID_NUMBER_OF_ARGUMENTS <- 4
 
 # Enable printing of the stack on error.
 options(error= function() { traceback(2); quit(save="no", status=ERROR_UNKNOWN)})
@@ -11,6 +12,10 @@ options(error= function() { traceback(2); quit(save="no", status=ERROR_UNKNOWN)}
 # Parse command line arguments if values were not provided through an OPEN_ME script.
 if(!exists("epigenetic_Name")) {
     parameters <- commandArgs(trailingOnly = TRUE)
+    if(length(parameters) != 13) {
+        quit(save="no", status = ERROR_INVALID_NUMBER_OF_ARGUMENTS);
+    }
+    
     epigenetic_Name <- parameters[1]
     epigenetic_Target <-  parameters[2]
     epigenetic_Folder <-  parameters[3]
@@ -26,19 +31,10 @@ if(!exists("epigenetic_Name")) {
     epi_foldchange_Threshold <- log2(as.numeric(parameters[9]))
     epi_pvalue_Threshold <- as.numeric(parameters[10])
     
-	trans_foldchange_Threshold <- epi_foldchange_Threshold
-	trans_pvalue_Threshold <- epi_pvalue_Threshold
-	
-	if(length(parameters) == 11) {
-        VERSION <- parameters[11]
-    } else if(length(parameters)==12) {
-		trans_foldchange_Threshold <- log2(as.numeric(parameters[11]))
-		trans_pvalue_Threshold <- as.numeric(parameters[12])
-	} else if(length(parameters)==13) {
-		trans_foldchange_Threshold <- log2(as.numeric(parameters[11]))
-		trans_pvalue_Threshold <- as.numeric(parameters[12])
-		VERSION <- parameters[13]
-	}
+    trans_foldchange_Threshold <- log2(as.numeric(parameters[11]))
+    trans_pvalue_Threshold <- as.numeric(parameters[12])
+    
+    VERSION <- parameters[13]
 }
 
 # There are only a handful of v1 project so by default, if those projects didn't
@@ -52,6 +48,7 @@ library(limma)
 # Load all utility files.
 source("LoadData.R")
 source("LimmaAnalysis.R")
+source("LimmaAnalysisControl.R")
 source("DigestionControl.R")
 source("SpikeControl.R")
 source("CategoryEnrichment.R")
@@ -60,10 +57,10 @@ source("GenerateBedgraph.R")
 
 # Utility function to calculate a cutoff for an array.
 calculateCutoffs <- function(intensityData) {
-	negControlIndices <- intensityData$genes$ID=="(-)3xSLv1"
+    negControlIndices <- intensityData$genes$ID=="(-)3xSLv1"
     probeSet <- intensityData[negControlIndices,]
-	return(c( mean(probeSet$R, na.rm=TRUE) + 4*apply(probeSet$R, 2, sd, na.rm=TRUE),
-			  mean(probeSet$G, na.rm=TRUE) + 4*apply(probeSet$G, 2, sd, na.rm=TRUE)))
+    return(c( mean(probeSet$R, na.rm=TRUE) + 4*apply(probeSet$R, 2, sd, na.rm=TRUE),
+              mean(probeSet$G, na.rm=TRUE) + 4*apply(probeSet$G, 2, sd, na.rm=TRUE)))
 }
 
 # Utility function to get the non-reference condition from a target object.
@@ -119,8 +116,8 @@ divergentScalePath <- file.path(getwd(), "Annotations", "DivergenceScaleNoLabel.
 if(epigenetic_Name!="") {
     # Load epigenetic data and annotations.
     epigeneticsData <- loadData(epigenetic_Folder, epigenetic_Target)
-    if(!sanityCheck(epigeneticsData, epigenetic_Folder)) {
-        quit(save="no", status=2) {
+    if(!performSanityCheck(epigeneticsData, epigenetic_Folder)) {
+        quit(save="no", status=ERROR_INVALID_EPIGENETIC_FORMAT)
     }
     otherCondition <- getOtherCondition(epigeneticsData$Target, reference_Condition)
 
@@ -132,7 +129,7 @@ if(epigenetic_Name!="") {
     oldWD <- getwd()
     setwd(file.path("Results", epigenetic_Name))
 
-    # Do the differential expression analysis					   
+    # Do the differential expression analysis                      
     limmaResults <- doLimmaAnalysis(epigeneticsData$Target, epigeneticsData$IntensityData, epi_foldchange_Threshold, epi_pvalue_Threshold, reference_Condition)
     
     # Generate QC plots
@@ -141,8 +138,8 @@ if(epigenetic_Name!="") {
     generateMAPlots(MA.RG(epigeneticsData$IntensityData, bc.method="none"), epigeneticsData$Target$Filename, " - Raw")
     generateMAPlots(limmaResults$Norm, epigeneticsData$Target$Filename, " - Normalized")
     generateDigestionPlots(epigeneticsData$IntensityData, annotation, epigeneticsData$Target$Filename)
-	# Generate Spike plot based on version.
-	if(VERSION=="v1") {
+    # Generate Spike plot based on version.
+    if(VERSION=="v1") {
         # Get additional information about the spikes.
         spikeTable <- read.table(file.path(oldWD, annotationFolder, "Spikes.txt"), sep="\t", header=TRUE)    
         generateSpikePlots(epigeneticsData$IntensityData, epigeneticsData$Target$Filename, spikeTable)
@@ -189,8 +186,8 @@ if(epigenetic_Name!="") {
 if(transcriptomic_Name!="") {
     # Load transcriptomic data and probe positions. 
     transcriptomicsData <- loadData(transcriptomic_Folder, transcriptomic_Target)
-    if(!sanityCheck(transcriptomicsData, transcriptomic_Folder)) {
-        quit(save="no", status=3) {
+    if(!performSanityCheck(transcriptomicsData, transcriptomic_Folder)) {
+        quit(save="no", status=ERROR_INVALID_TRANSCRIPTOMIC_FORMAT)
     }
     bedTrans <- read.table(file.path(annotationFolder, "BestEMBV3.bed"), sep="\t", col.names=c("BEDChromosome", "Start", "End", "Probe"))
     otherCondition <- getOtherCondition(transcriptomicsData$Target, reference_Condition)
@@ -222,7 +219,7 @@ if(transcriptomic_Name!="") {
 
     # Generate differentially expressed circos track.
     #posTransData <- posTransData[(posTransData$PVal < -log10(trans_pvalue_Threshold)) & (abs(posTransData$FC) > trans_foldchange_Threshold),]
-	posTransData <- posTransData[posTransData$ID %in% limmaResultsTrans$DiffExpr$ID,]
+    posTransData <- posTransData[posTransData$ID %in% limmaResultsTrans$DiffExpr$ID,]
     diffExprTrans <- cbind(posTransData[,c("BEDChromosome", "Start", "End", "PVal"),],
                            ifelse(posTransData[,3]<0, "color=red,angle_shift=180", "color=green"))
     generateBedGraph(diffExprTrans, "DiffExpr-P-Value-Trans")

@@ -47,11 +47,11 @@ performSanityCheck <- function(dataObject, dataFolder) {
 
     hasError <- FALSE
     for(i in 2:length(allData)) {
-        if(any(allData[[1]]$ID!=allData[[i]]$ID)) {
+        if(any(allData[[1]]$ID!=allData[[i]]$ID, na.rm=TRUE)) {
             write(paste("Mismatch between", names(allData)[1], "and", names(allData)[i]), stderr())
             hasError <- TRUE
         }
     }
     
-    return(hasError);
+    return(!hasError);
 }

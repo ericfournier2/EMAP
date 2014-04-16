@@ -138,9 +138,9 @@ generateVolcanoPlot <- function(fitData, foldchange_Threshold, pvalue_Threshold,
     p <- ggplot(volcanoDF, aes(x=FoldChange, y=PValue, color=Significant)) +
         geom_point() +
         scale_x_continuous(limits=c(-xWidth, xWidth)) +
-        geom_hline(aes(yintercept=-log10(pvalue_Threshold)), linetype="dashed") +
-        geom_vline(aes(xintercept=-foldchange_Threshold), linetype="dashed") +
-        geom_vline(aes(xintercept=foldchange_Threshold), linetype="dashed") +
+        geom_hline(yintercept=-log10(pvalue_Threshold), linetype="dashed") +
+        geom_vline(xintercept=-foldchange_Threshold, linetype="dashed") +
+        geom_vline(xintercept=foldchange_Threshold, linetype="dashed") +
         labs(x="log2(Fold-Change)",
              y="-log10(p-value)",
              title="Volcano plot of fold-changes and p-values") +                              # Set axis labels
