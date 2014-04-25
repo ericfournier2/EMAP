@@ -189,7 +189,7 @@ if(transcriptomic_Name!="") {
     if(!performSanityCheck(transcriptomicsData, transcriptomic_Folder)) {
         quit(save="no", status=ERROR_INVALID_TRANSCRIPTOMIC_FORMAT)
     }
-    bedTrans <- read.table(file.path(annotationFolder, "BestEMBV3.bed"), sep="\t", col.names=c("BEDChromosome", "Start", "End", "Probe"))
+    bedTrans <- read.table("Annotations/Circos-BESTv1.bed", sep="\t", col.names=c("BEDChromosome", "Start", "End", "Probe"))
     otherCondition <- getOtherCondition(transcriptomicsData$Target, reference_Condition)
     annotationTrans <- read.table("Annotations/EMBV3.annotation_table_2.xls", header=TRUE, sep="\t", quote="")
     

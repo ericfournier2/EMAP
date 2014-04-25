@@ -11,13 +11,20 @@
 #      Fit:      Linear fit data.
 #      DiffExpr: List of differentially expressed genes.
 doLimmaAnalysisControl <- function(targetData, intensityData, foldChangeCutoff, pValueCutoff, refCondition) {
+    # Create a "marker" file to make it clear that the generated results
+    # have had control normalization applied.
+    file.create("WARNING CONTROL NORMALIZATION IS BEING USED", showWarnings=FALSE)
+    
+    # If no reference condition was provided, pick one randomly (Red channel of first array).
     refCond <- refCondition
     if(is.na(refCondition) || refCondition=="") {
         refCond <- targetData$Cy5[1]
     }
     
-	fitDesign <- modelMatrix(targetData, ref=refCond)
-	
+    # Determine which probes are above the background.
+    aboveBG <- listAboveBG(intensityData, targetData, refCond)
+    
+    # Perform normalization
     controlWeights <- rep(0, nrow(intensityData$R))
     controlWeights[substr(intensityData$gene$ID, 1, 8)=="EDMA_SPK"] <- 1
     controlWeights[substr(intensityData$gene$ID, 1, 8)=="EDMA_DIG"] <- 0.05
@@ -26,15 +33,19 @@ doLimmaAnalysisControl <- function(targetData, intensityData, foldChangeCutoff, 
                                            controlspots=(substr(intensityData$genes$ID,1,8)=="EDMA_SPK")|(substr(intensityData$genes$ID,1,8)=="EDMA_DIG"),
                                            weights=controlWeights)
 	Std_MA_Between <- normalizeBetweenArrays(Std_MA_Within, method="quantile")
-	
+
+    # Perform linear fit and bayesian correction.
+	fitDesign <- modelMatrix(targetData, ref=refCond)	
 	fit <- lmFit(Std_MA_Between, design=fitDesign)
 	ebayes_fit <- eBayes(fit)
 	
+    # Determine which probes are differentially expressed/methylated.
 	coef <- abs(ebayes_fit$coefficients) > foldChangeCutoff
 	pval <- ebayes_fit$p.value < pValueCutoff
 	indices <- coef & pval
 	indices[is.na(indices)] <- FALSE
-	
-	diffExpr <- data.frame(ID=ebayes_fit$genes[indices,"ID"], Coef=ebayes_fit$coefficients[indices], PVal=ebayes_fit$p.value[indices])
-    return(list(Norm=Std_MA_Between, Fit=ebayes_fit, DiffExpr=diffExpr, NormWithin=Std_MA_Within))
+    diffExpr <- subsetFit(ebayes_fit, indices)
+    
+    # Build the return object.
+    return(list(Norm=Std_MA_Between, Fit=ebayes_fit, DiffExpr=diffExpr, AboveBG=aboveBG))    
 }
