@@ -26,7 +26,7 @@ transcriptomic_Folder <- ""
 
 # 5. Substitute the path to the directory containing the analysis pipeline in the following
 #    expression. If the path contains slashes, substitute all backslashes with forwars slashes.
-setwd("C:/Dev/Projects/Epigenetics/v3 pipeline")
+setwd("C:/Dev/Projects/Epigenetics/cow\EMAP")
 
 # 6. Give names to your epigenetic and transcriptomic experiments.
 epigenetic_Name <- "Sperm"
@@ -51,7 +51,7 @@ trans_pvalue_Threshold <- 0.05
 
 # 10. If you have been using the beta version  of the chip (with probe names GT_HQ...), change
 #     this to "v1". Otherwise (if the probe names are EDMA_MET...), keep this set as "v2".
-VERSION <- "v2"
+VERSION <- "v1"
 
 # 11. Open R, select "Source R code" from the "File" menu, and load this analysis script.
 #     The script will automatically analyze your data, and output the results in the
