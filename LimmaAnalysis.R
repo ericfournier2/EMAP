@@ -340,3 +340,33 @@ generateAboveBackgroundPlots <- function(epigeneticsData, limmaResults, referenc
         geom_text(label=pLabel, x=2.5, y=yMax*1.1, hjust=1, vjust=0)
     ggsave("Number of probes above the background.png")
 }
+
+# For each gene, counts the number of probes which are differentially
+# methylated for that gene.
+getNumberOfDMProbesPerGene <- function(diffExpr) {
+    # If precomputed indices do not exist, generate them.
+    if(!file.exists(file.path(geneMapPath)) || !file.exists(probeGeneIDPath)) {
+        print("Generating gene symbol -> numeric ID mapping... This may take a while.\n")
+        buildGeneAnnotation()
+        print("Done!\n")
+    }
+
+    # Load gene symbol -> numeric gene ID map
+    geneMap <- read.table(geneMapPath, sep="\t", header=TRUE, as.is=TRUE)
+    
+    # Load Probe -> numeric gene IDs map
+    mapTable <- read.table(probeGeneIDPath, sep="\t", header=TRUE, as.is=TRUE)
+    mapList <- lapply(strsplit(mapTable$GeneIDs, " "), as.integer)
+    
+    # Count the number of differentially expressed probes associated with each
+    # gene.
+    diffExprInd <- annotation$Probe %in% diffExpr$ID
+    results <- rep(0, nrow(geneMap))
+    for(idVec in mapList[diffExprInd]) {
+        if(length(idVec)!=0) {
+            results[idVec] <- results[idVec] + 1
+        }
+    }
+
+    return(data.frame(Gene=geneMap$Gene, ProbeCount=geneMap$Count, DiffExprProbeCount=results, Ratio=results/geneMap$Count))
+}    
