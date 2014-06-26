@@ -24,19 +24,19 @@ sed "1d" "Data/$1/Imprint-Fold-Change.bedgraph" | grep -v -F "NA" | perl Average
 
 
 # Process DiffExpr values for scatterplot.
-sed "1d" "Data/$1/DiffExpr-P-Value.bedgraph" | sort -k 4nr | head -n 100 > ProcessedData/DiffExpr-P-Value.bedgraph
+sed "1d" "Data/$1/DiffExpr-P-Value.bedgraph" | sort -k 4nr | head -n 200 > ProcessedData/DiffExpr-P-Value.bedgraph
 
 # Create output directory.
 mkdir -p Output/"$2"
 
-# Replace output file name within configuration file, and make a copy in the output directory.
-sed -e "s/OUTPUT_FILE/$2/g" Input/conf/epi.circos.conf.template > temp
+sed -e "s/OUTPUT_FILE/$2/g" Input/conf/epi.circos.conf.template |
+    sed -e "s/ORGANISM/$3/g"  > temp
 sed -e "s/PROBE_SUBSET//g" temp > "Output/$2/$2.epi.circos.conf"
 sed -e "s/PROBE_SUBSET/-Significant/g" temp > "Output/$2/$2.epi.circos.sig.conf"
 sed -e "s/PROBE_SUBSET/-30K/g" temp > "Output/$2/$2.epi.circos.30K.conf"
 rm temp
 
-# Generate The ciscos plot.
+# Generate The circos plot.
 circos -conf "Output/$2/$2.epi.circos.conf"
 circos -conf "Output/$2/$2.epi.circos.sig.conf"
 circos -conf "Output/$2/$2.epi.circos.30K.conf"

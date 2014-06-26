@@ -6,10 +6,13 @@ generateDigestionPlots <- function(intensityData, annotation, filenames) {
 	if(VERSION=="v1") {
         digData <- intensityData[substr(intensityData$genes$ID, 0, 11)=="GT_MET_CTRL",]
         digAnnot <- annotation[substr(annotation$Probe, 0, 11)=="GT_MET_CTRL",]
-    } else {
+    } else if(VERSION=="v2") {
         digData <- intensityData[substr(intensityData$genes$ID, 0, 8)=="EDMA_DIG",]
         digAnnot <- annotation[substr(annotation$Probe, 0, 8)=="EDMA_DIG",]    
-    }
+    } else {	# pigv1
+        digData <- intensityData[substr(intensityData$genes$ID, 0, 6)=="GT_DIG",]
+        digAnnot <- annotation[substr(annotation$Probe, 0, 6)=="GT_DIG",]    	
+	}
 	
 	# Reorder the digestion controls based on their genomic position.
 	digAnnot <- digAnnot[order(digAnnot$Chromosome, digAnnot$Fragment_Start),]

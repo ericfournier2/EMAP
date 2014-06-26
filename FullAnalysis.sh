@@ -15,10 +15,19 @@ TRANS_PVALUE_THRESHOLD=${12}
 VERSION=${13}
 
 # If version is unspecified or invalid, default to v2.
-if [ "$VERSION" != "v1" ]
+if [ "$VERSION" != "v1" -a "$VERSION" != "pigv1" ]
 then
     VERSION="v2"
 fi
+
+# Select organism.
+if [ "$VERSION" == "pigv1" ]
+then
+    ORGANISM="pig"
+else
+    ORGANISM="cow"
+fi
+
 
 # Generate both transcriptomic and epigenetic analysis
 Rscript main.R "$EPIGENETIC_NAME" "$EPIGENETIC_TARGET" "$EPIGENETIC_FOLDER" \
@@ -67,12 +76,12 @@ ln -f -s "`pwd`/Results/$EPIGENETIC_NAME/Bedgraph/Imprint-Fold-Change.bedgraph" 
 
 cd CircosAutomation
 
-./GeneratePlotEpi.sh "$CIRCOS_FOLDER" "$NAME_EPI"
+./GeneratePlotEpi.sh "$CIRCOS_FOLDER" "$NAME_EPI" "$ORGANISM"
 cp "Output/$NAME_EPI"/*.legend.png "../Results/$EPIGENETIC_NAME/"
 
 if [ "$COMBINED_NAME" != "" ]
 then
-    ./GeneratePlotCombined.sh "$CIRCOS_FOLDER" "$NAME_COMBI"
+    ./GeneratePlotCombined.sh "$CIRCOS_FOLDER" "$NAME_COMBI" "$ORGANISM"
     cp "Output/$NAME_COMBI/"*.legend.png "../Results/$COMBINED_NAME/"
 fi
 cd ..

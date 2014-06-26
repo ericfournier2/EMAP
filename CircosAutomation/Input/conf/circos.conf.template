@@ -1,10 +1,10 @@
 # Chromosome name, size, color and bands definition.
-karyotype = Input/cow.UMD3.1.karyotype.txt
+karyotype = Input/ORGANISM.karyotype.txt
 
 # Define the chromosome unit, which will be what the "u" suffix will refer to from now on.
 chromosomes_units = 1000000
 
-<<include Input/conf/ideogram.conf>>
+<<include Input/conf/ideogram.conf.template>>
 <<include Input/conf/ticks.conf>>
 
 <plots>

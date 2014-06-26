@@ -201,13 +201,19 @@ generateMAPlots <- function(intensityData, filenames, qualifier) {
         ctrlTypes[ctrlTypes == "GT_MET_CTRL"] <- "Digestion\nControl"
         ctrlTypes[ctrlTypes == "GT_MET_SPK_"] <- "Spike-in"
         ctrlTypes[substr(ctrlTypes, 1, 5) == "GT_HQ" | substr(ctrlTypes, 1, 5) == "GT_LQ"] <- "Standard\nProbe"
-    } else {
+    } else if(VERSION=="v2") {
         ctrlTypes <- substr(intensityData$genes$ID, 1, 8)
         ctrlTypes[substr(ctrlTypes, 1, 4) != "EDMA"] <- "Agilent\nControl"
         ctrlTypes[ctrlTypes == "EDMA_DIG"] <- "Digestion\nControl"
         ctrlTypes[ctrlTypes == "EDMA_MET"] <- "Standard\nProbe"
         ctrlTypes[ctrlTypes == "EDMA_SPK"] <- "Spike-in"    
-    }
+    } else {	#pigv1
+        ctrlTypes <- substr(intensityData$genes$ID, 1, 9)
+        ctrlTypes[substr(ctrlTypes, 1, 2) != "GT"] <- "Agilent\nControl"
+        ctrlTypes[substr(ctrlTypes, 1, 6) == "GT_DIG"] <- "Digestion\nControl"
+        ctrlTypes[ctrlTypes == "GT_pig_Hq" | ctrlTypes == "GT_pig_Lq"] <- "Standard\nProbe"
+        ctrlTypes[ctrlTypes == "GT_MET_SP"] <- "Spike-in"    	
+	}
     
     # Turn types into a factor for color ordering.
     ctrlTypes <- factor(ctrlTypes, levels=c("Standard\nProbe", "Digestion\nControl", "Agilent\nControl", "Spike-in"))
@@ -274,8 +280,10 @@ generateAboveBackgroundPlots <- function(epigeneticsData, limmaResults, referenc
     # Keep only standard probes in the diffexpr set.
     if(VERSION=="v1") {
         diffExpr <- (epigeneticsData$IntensityData$genes$ID %in% grep("^GT_[HL]Q", limmaResults$DiffExpr$ID, value=TRUE))
-    } else {
+    } else if(VERSION=="v2") {
         diffExpr <- (epigeneticsData$IntensityData$genes$ID %in% grep("^EDMA_MET", limmaResults$DiffExpr$ID, value=TRUE))
+    } else {    # pigv1
+        diffExpr <- (epigeneticsData$IntensityData$genes$ID %in% grep("^GT_pig_[HL]q", limmaResults$DiffExpr$ID, value=TRUE))
     }
     
     # Plot a venn diagram of probes which are above the background in all arrays of each condition.

@@ -250,9 +250,13 @@ enrichmentAnalysis <- function(diffExpr, annotations) {
 		Proximity=evaluateCategories(proximityCategory, "Unknown", annotations, diffExpr),
 		Length=evaluateCategories(lengthCategory, "Unknown", annotations, diffExpr),
 		Density=evaluateCategories(densityCategory, "Unknown", annotations, diffExpr),
-		RepeatClasses=evaluateCategories(repeatClasses, c(), annotations, diffExpr),
-        TFBS=evaluateCategories(tfClasses, "None", annotations, diffExpr))
-        
+		RepeatClasses=evaluateCategories(repeatClasses, c(), annotations, diffExpr))
+
+    # Only evaluate TFBS enrichment if there are annotations for it.
+    if(length(unique(tfClasses)) > 1) {
+        result[["TFBS"]] <- evaluateCategories(tfClasses, "None", annotations, diffExpr)
+    }    
+    
     # Fix names and display orders
     relativeOrders=list(Proximity=c("Open Sea", "CpG Shelf", "CpG Shore", "CpG Islands"),
                         Length=c("No CpG Island","Small","Intermediate","Long"),

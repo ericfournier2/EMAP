@@ -17,5 +17,3 @@ chr	-	chr16	16	0	86898991	chr16
 chr	-	chr17	17	0	69701581	chr17
 chr	-	chr18	18	0	61220071	chr18
 chr	-	chrX	X	0	144288218	chr19
-chr	-	chrY	Y	0	1637716	chr20
-chr	-	chrM	M	0	16613	chr21

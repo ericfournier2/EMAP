@@ -83,11 +83,6 @@ writeEnrichmentData <- function(enrich, folder, relativeOnly) {
         enrich[[i]]$"Relative DMR Count" <- gsub("\n", " ", enrich[[i]]$"Relative DMR Count")
     }
 
-    # Add FDR corrected p-values to the TFBS data-frame.
-    enrich$TFBS <- cbind(enrich$TFBS,
-                         "p-value-low-fdr"=p.adjust(enrich$TFBS$"p-value-low", method="fdr"),
-                         "p-value-high-fdr"=p.adjust(enrich$TFBS$"p-value-high", method="fdr"))
-    
     # Write out the raw enrichment data.
     if(relativeOnly=="") {
         write.table(enrich$GeneRegion, file="Genic region/Enrichment - Gene Regions.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
@@ -102,8 +97,17 @@ writeEnrichmentData <- function(enrich, folder, relativeOnly) {
         write.table(enrich$Density, file="Enrichment - CpG Density.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
         write.table(enrich$RepeatClasses, file="Enrichment - Repeat Classes.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
     }
-    write.table(enrich$TFBS, file="Enrichment - TFBS.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
 
+    # Output TFBS information if it is present.
+    if(!is.null(enrich$TFBS)) {
+        # Add FDR corrected p-values to the TFBS data-frame.
+        enrich$TFBS <- cbind(enrich$TFBS,
+                             "p-value-low-fdr"=p.adjust(enrich$TFBS$"p-value-low", method="fdr"),
+                             "p-value-high-fdr"=p.adjust(enrich$TFBS$"p-value-high", method="fdr"))
+        
+        write.table(enrich$TFBS, file="Enrichment - TFBS.txt", row.names=TRUE, col.names=TRUE, quote=FALSE, sep="\t")
+    }
+    
     setwd(previousWD)
 }
 
@@ -139,7 +143,7 @@ if(epigenetic_Name!="") {
     generateMAPlots(limmaResults$Norm, epigeneticsData$Target$Filename, " - Normalized")
     generateDigestionPlots(epigeneticsData$IntensityData, annotation, epigeneticsData$Target$Filename)
     # Generate Spike plot based on version.
-    if(VERSION=="v1") {
+    if(VERSION=="v1" || VERSION=="pigv1") {
         # Get additional information about the spikes.
         spikeTable <- read.table(file.path(oldWD, annotationFolder, "Spikes.txt"), sep="\t", header=TRUE)    
         generateSpikePlots(epigeneticsData$IntensityData, epigeneticsData$Target$Filename, spikeTable)

@@ -1,10 +1,10 @@
 # Chromosome name, size, color and bands definition.
-karyotype = Input/cow.UMD3.1.karyotype.txt
+karyotype = Input/ORGANISM.karyotype.txt
 
 # Define the chromosome unit, which will be what the "u" suffix will refer to from now on.
 chromosomes_units = 1000000
 
-<<include Input/conf/ideogram.conf>>
+<<include Input/conf/ideogram.conf.template>>
 <<include Input/conf/ticks.conf>>
 
 <plots>
@@ -59,15 +59,7 @@ chromosomes_units = 1000000
      </plot>
     
     # Imprinted fold-change track.
-    <plot>
-        <<include Input/conf/FC-Histogram.conf.template>>
-        file = ProcessedData/Imprint-Fold-Change.bedgraph
-        r1   = 0.60r
-        r0   = 0.50r        
-    </plot>
-    
-    # Imprinted name track.
-    <<include Input/conf/ImprintNames.conf.template>>
+    <<include Input/conf/ORGANISM.Imprint.conf.template>>
 </plots>
 
 ################################################################
