@@ -26,7 +26,7 @@ transcriptomic_Folder <- ""
 
 # 5. Substitute the path to the directory containing the analysis pipeline in the following
 #    expression. If the path contains slashes, substitute all backslashes with forwars slashes.
-setwd("C:/Dev/Projects/Epigenetics/cow\EMAP")
+setwd("C:/Dev/Projects/Epigenetics/cow/EMAP")
 
 # 6. Give names to your epigenetic and transcriptomic experiments.
 epigenetic_Name <- "Sperm"

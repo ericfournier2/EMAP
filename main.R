@@ -54,6 +54,7 @@ source("SpikeControl.R")
 source("CategoryEnrichment.R")
 source("HotSpotDetection.R")
 source("GenerateBedgraph.R")
+source("BuildGeneAnnotation.R")
 
 # Utility function to calculate a cutoff for an array.
 calculateCutoffs <- function(intensityData) {
@@ -110,6 +111,10 @@ writeEnrichmentData <- function(enrich, folder, relativeOnly) {
 annotationFolder <- file.path("Annotations", VERSION)
 divergentScalePath <- file.path(getwd(), "Annotations", "DivergenceScaleNoLabel.png")
 
+# Determine path of pre-computed gene indices/counts
+geneMapPath <- file.path(file.path(getwd(), annotationFolder, "GeneMap.txt"))
+probeGeneIDPath <- file.path(getwd(), annotationFolder, "ProbeGeneIDs.txt")
+
 ###################################################################################################
 #                                     Epigenetic Analysis                                         #
 ###################################################################################################
@@ -131,6 +136,7 @@ if(epigenetic_Name!="") {
 
     # Do the differential expression analysis                      
     limmaResults <- doLimmaAnalysis(epigeneticsData$Target, epigeneticsData$IntensityData, epi_foldchange_Threshold, epi_pvalue_Threshold, reference_Condition)
+    dmProbesPerGene <- getNumberOfDMProbesPerGene(limmaResults$DiffExpr)
     
     # Generate QC plots
     dir.create("QC plots", showWarnings=FALSE, recursive=TRUE)
@@ -152,6 +158,7 @@ if(epigenetic_Name!="") {
     dir.create("Limma Analysis", showWarnings=FALSE, recursive=TRUE)
     setwd("Limma Analysis")
     outputLimmaResults(limmaResults, annotation, reference_Condition, otherCondition, categories=categories)
+    write.table(dmProbesPerGene, file="DMProbePerGene.txt", sep="\t", col.names=TRUE, row.names=FALSE, quote=FALSE)
     generateVolcanoPlot(limmaResults$Fit, epi_foldchange_Threshold, epi_pvalue_Threshold, epigeneticsData$Target, reference_Condition, "Hyper-methylated")
     generateAboveBackgroundPlots(epigeneticsData, limmaResults, reference_Condition)
     setwd("..")
