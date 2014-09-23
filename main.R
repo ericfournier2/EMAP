@@ -219,8 +219,8 @@ if(transcriptomic_Name!="") {
     
     # Get positionned and ordered transcriptomic data.
     posTransData <- cbind(ID=limmaResultsTrans$Fit$genes$ID,
-                          PVal=-log10(limmaResultsTrans$Fit$p.value),
-                          FC=limmaResultsTrans$Fit$coefficients,
+                          PVal=as.vector(-log10(limmaResultsTrans$Fit$p.value)),
+                          FC=as.vector(limmaResultsTrans$Fit$coefficients),
                           bedTrans[match(limmaResultsTrans$Fit$genes$ID, bedTrans[,4]), 1:3])
     posTransData <- posTransData[order(posTransData$BEDChromosome, posTransData$Start),]
                           

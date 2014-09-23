@@ -126,9 +126,9 @@ generateVolcanoPlot <- function(fitData, foldchange_Threshold, pvalue_Threshold,
     nonRefCondition <- setdiff(unique(c(target$Cy3, target$Cy5)), reference_Condition)
     
     # Build the data frame.
-    volcanoDF <- data.frame(FoldChange=fitData$coefficients,
-                            PValue=-log10(fitData$p.value),
-                            Significant=sigVec)
+    volcanoDF <- data.frame(FoldChange=as.vector(fitData$coefficients),
+                            PValue=as.vector(-log10(fitData$p.value)),
+                            Significant=as.vector(sigVec))
                             
     # Infer limits to create a symmetrical plot along the x-axis
     xWidth <- max(abs(min(volcanoDF$FoldChange, na.rm=TRUE)), max(volcanoDF$FoldChange, na.rm=TRUE))
