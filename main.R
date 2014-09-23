@@ -52,7 +52,7 @@ source("LimmaAnalysisControl.R")
 source("DigestionControl.R")
 source("SpikeControl.R")
 source("CategoryEnrichment.R")
-source("HotSpotDetection.R")
+source("SpatialAnalysis.R")
 source("GenerateBedgraph.R")
 source("BuildGeneAnnotation.R")
 
@@ -185,7 +185,10 @@ if(epigenetic_Name!="") {
     # Perform hot-spot detection.
     hotSpots <- doHotSpotDetection(limmaResults$Fit, annotation)
     write.table(hotSpots, file="HotSpots.txt", quote=FALSE, row.names=FALSE, col.names=TRUE)
-
+    generateSpatialFCProfile(limmaResults$Fit, annotation,
+                             filename="Spatial chromosome FC Analysis",
+                             chromosomes=paste("chr", c(1:9, "X")))
+    
     # Return to the old working directory.
     setwd(oldWD)
 }
