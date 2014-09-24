@@ -55,6 +55,7 @@ source("CategoryEnrichment.R")
 source("SpatialAnalysis.R")
 source("GenerateBedgraph.R")
 source("BuildGeneAnnotation.R")
+source("topGOEnrichment.R")
 
 # Utility function to calculate a cutoff for an array.
 calculateCutoffs <- function(intensityData) {
@@ -181,6 +182,10 @@ if(epigenetic_Name!="") {
     writeEnrichmentData(enrichDMRs, "DMRs", "")
     writeEnrichmentData(enrichRef, reference_Condition, reference_Condition)
     writeEnrichmentData(enrichOther, otherCondition, otherCondition)
+
+    # Perform GO enrichment analysis
+    charDiffID <- as.character(limmaResults$DiffExpr$ID)
+    goEnrichment <- performTopGOEnrichment(unique(charDiffID[charDiffID %in% annotation$Probe]), annotation$Probe, "GO Enrichment")
     
     # Perform hot-spot detection.
     hotSpots <- doHotSpotDetection(limmaResults$Fit, annotation)
