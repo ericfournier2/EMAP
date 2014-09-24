@@ -187,7 +187,7 @@ if(epigenetic_Name!="") {
     write.table(hotSpots, file="HotSpots.txt", quote=FALSE, row.names=FALSE, col.names=TRUE)
     generateSpatialFCProfile(limmaResults$Fit, annotation,
                              filename="Spatial chromosome FC Analysis",
-                             chromosomes=paste("chr", c(1:9, "X")))
+                             chromosomes=paste("chr", c(1:9, "X"), sep=""))
     
     # Return to the old working directory.
     setwd(oldWD)
