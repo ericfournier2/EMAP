@@ -3,7 +3,8 @@
 library(GO.db)
 library(topGO)
 
-probe2go <- readMappings(file.path("Annotations", VERSION, "GO_Filtered.map"))
+probe2goEpi <- readMappings(file.path("Annotations", VERSION, "GO_Filtered.map"))
+probe2goTrans <- readMappings("Annotations/probe2go.map")
 
 # Performs the actual calls to topGO to perform the enrichment analysis.
 # Parameters:
@@ -86,7 +87,8 @@ moduleMembershipSelect <- function(x) {
 # Returns:
 #   A list of three elements, one for each ontology (BP, CC, MF). See innerTopGO for the structure
 #   of each individual element.
-performTopGOEnrichment <- function(chosenProbes, subsetOfProbes, outputFilename, probeScores=NULL, probeSelectionFun=NULL, scoreOrder="increasing") {
+performTopGOEnrichment <- function(chosenProbes, subsetOfProbes, outputFilename, platform="Epigenetic", 
+                                   probeScores=NULL, probeSelectionFun=NULL, scoreOrder="increasing", ) {
     # Make sure the inputs are correct.
     if(!all(chosenProbes %in% subsetOfProbes)) {
         stop("Error: Chosen probes are not all part of the given subset")
@@ -104,9 +106,18 @@ performTopGOEnrichment <- function(chosenProbes, subsetOfProbes, outputFilename,
         stop("Error: duplicated probes in subsetOfProbes")
     }
     
+    if(!(platform %in% c("Epigenetic", "Transcriptomic"))) {
+        stop("Error: Platform must be either 'Epigenetic' or 'Transcriptomic'")
+    }
+    
     cat(paste("Selected ", length(chosenProbes), " out of ", length(subsetOfProbes), ".\n", sep=""))
 
-    probe2go
+    # Switch annotations depending on the platform.
+    if(platform=="Epigenetic") {
+        probe2go <- probe2goEpi
+    } else {
+        probe2go <- probe2goTrans
+    }
     
     # Subset probes so that only those with GO annotations are used for the analysis.
     goSubset <- probe2go[names(probe2go) %in% subsetOfProbes]

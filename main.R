@@ -185,7 +185,7 @@ if(epigenetic_Name!="") {
 
     # Perform GO enrichment analysis
     charDiffID <- as.character(limmaResults$DiffExpr$ID)
-    goEnrichment <- performTopGOEnrichment(unique(charDiffID[charDiffID %in% annotation$Probe]), annotation$Probe, "GO Enrichment")
+    goEnrichment <- performTopGOEnrichment(unique(charDiffID[charDiffID %in% annotation$Probe]), annotation$Probe, "GO Enrichment", "Epigenetic")
     
     # Perform hot-spot detection.
     hotSpots <- doHotSpotDetection(limmaResults$Fit, annotation)
@@ -243,6 +243,10 @@ if(transcriptomic_Name!="") {
                            ifelse(posTransData[,3]<0, "color=red,angle_shift=180", "color=green"))
     generateBedGraph(diffExprTrans, "DiffExpr-P-Value-Trans")
 
+    # Perform GO enrichment.
+    charDiffID <- as.character(limmaResults$DiffExpr$ID)
+    goEnrichment <- performTopGOEnrichment(unique(charDiffID[charDiffID %in% annotationTrans$Probe]), annotationTrans$Probe, "GO Enrichment", "Transcriptomic")    
+    
     # Restore old working directory.
     setwd(oldWD)
 }
