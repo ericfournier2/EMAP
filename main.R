@@ -56,6 +56,7 @@ source("SpatialAnalysis.R")
 source("GenerateBedgraph.R")
 source("BuildGeneAnnotation.R")
 source("topGOEnrichment.R")
+source("PathwayAnalysis.R")
 
 # Utility function to calculate a cutoff for an array.
 calculateCutoffs <- function(intensityData) {
@@ -114,6 +115,8 @@ writeEnrichmentData <- function(enrich, folder, relativeOnly) {
 }
 
 annotationFolder <- file.path("Annotations", VERSION)
+dir.create(file.path(getwd(), "Annotations", "KEGG"), showWarnings=FALSE)
+annotationKEGG <- file.path(getwd(), "Annotations", "KEGG")
 divergentScalePath <- file.path(getwd(), "Annotations", "DivergenceScaleNoLabel.png")
 
 # Determine path of pre-computed gene indices/counts
@@ -244,8 +247,19 @@ if(transcriptomic_Name!="") {
     generateBedGraph(diffExprTrans, "DiffExpr-P-Value-Trans")
 
     # Perform GO enrichment.
-    charDiffID <- as.character(limmaResults$DiffExpr$ID)
+    charDiffID <- as.character(limmaResultsTrans$DiffExpr$ID)
     goEnrichment <- performTopGOEnrichment(unique(charDiffID[charDiffID %in% annotationTrans$Probe]), annotationTrans$Probe, "GO Enrichment", "Transcriptomic")    
+    
+    dir.create("KEGG", showWarnings=FALSE)
+    setwd("KEGG")
+    tryCatch( {
+        keggEnrichment <- performPathwayEnrichment(unique(charDiffID[charDiffID %in% annotationTrans$Probe]),
+                                                   annotationTrans$Probe,
+                                                   annotationTrans,
+                                                   limmaResultsTrans$Fit$coefficients[match(annotationTrans$Probe, limmaResultsTrans$Fit$gene$ID)])
+    }, finally={
+        setwd("..")
+    })
     
     # Restore old working directory.
     setwd(oldWD)
