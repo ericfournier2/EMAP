@@ -16,30 +16,30 @@
 #    you have just created. Make sure the names are correct and that the file extension is present.
 #    If you cannot see the file extension, it might be ".txt".
 #    If you do not have a transcriptomic experiment, simply write "".
-epigenetic_Target <- "Sperm.target"
-transcriptomic_Target <- ""
+epigenetic_Target <- "HighEpi.target"
+transcriptomic_Target <- "HighTrans.target"
 
 # 4. Substitute the name of the folders containing your target files and raw data. 
 #    If your target file are directly in the analysis folder, you can leave this empty.
-epigenetic_Folder <- "Raw/Sperm"
-transcriptomic_Folder <- ""
+epigenetic_Folder <- "Raw/Denise"
+transcriptomic_Folder <- "Raw/Denise"
 
 # 5. Substitute the path to the directory containing the analysis pipeline in the following
 #    expression. If the path contains slashes, substitute all backslashes with forwars slashes.
-setwd("C:/Dev/Projects/Epigenetics/cow/EMAP")
+setwd("C:/Dev/Projects/Epigenetics/cow\EMAP")
 
 # 6. Give names to your epigenetic and transcriptomic experiments.
-epigenetic_Name <- "Sperm"
-transcriptomic_Name <- ""
+epigenetic_Name <- "Denise/High/Epigenetic"
+transcriptomic_Name <- "Denise/High/Transcriptomic"
 
 # 7. Set the "reference" condition for your experiment. If you are analysing a combined 
 #    transcriptomic and epigenetic analysis, you MUST specify a reference condition, and
 #    it must exist in both. Otherwise, if the reference condition has no importante, set 
 #    this to "" and the script will pick one for you.
-reference_Condition <- "Embryo"
+reference_Condition <- "Zero"
 
 # 8 Set a name for the results of the "Combined" analysis.
-combined_Name <- " Sperm"
+combined_Name <- " Denise/High/Combined"
 
 # 9. Set thresholds for significance.
 epi_foldchange_Threshold <- log2(1.5)
@@ -51,7 +51,7 @@ trans_pvalue_Threshold <- 0.05
 
 # 10. If you have been using the beta version  of the chip (with probe names GT_HQ...), change
 #     this to "v1". Otherwise (if the probe names are EDMA_MET...), keep this set as "v2".
-VERSION <- "v1"
+VERSION <- "v2"
 
 # 11. Open R, select "Source R code" from the "File" menu, and load this analysis script.
 #     The script will automatically analyze your data, and output the results in the

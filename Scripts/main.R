@@ -46,17 +46,17 @@ if(!exists("VERSION")) {
 library(limma)
 
 # Load all utility files.
-source("LoadData.R")
-source("LimmaAnalysis.R")
-source("LimmaAnalysisControl.R")
-source("DigestionControl.R")
-source("SpikeControl.R")
-source("CategoryEnrichment.R")
-source("SpatialAnalysis.R")
-source("GenerateBedgraph.R")
-source("BuildGeneAnnotation.R")
-source("topGOEnrichment.R")
-source("PathwayAnalysis.R")
+source("Scripts/LoadData.R")
+source("Scripts/LimmaAnalysis.R")
+source("Scripts/LimmaAnalysisControl.R")
+source("Scripts/DigestionControl.R")
+source("Scripts/SpikeControl.R")
+source("Scripts/CategoryEnrichment.R")
+source("Scripts/SpatialAnalysis.R")
+source("Scripts/GenerateBedgraph.R")
+source("Scripts/BuildGeneAnnotation.R")
+source("Scripts/topGOEnrichment.R")
+source("Scripts/PathwayAnalysis.R")
 
 # Utility function to calculate a cutoff for an array.
 calculateCutoffs <- function(intensityData) {

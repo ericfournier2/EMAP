@@ -10,7 +10,7 @@ annotationFolder <- file.path("Annotations", VERSION)
 annotations <- read.table(file.path(annotationFolder, "EDMA.Annotation.txt"), header=TRUE, sep="\t")
 
 # Load the relevant helper functions.
-source("CategoryEnrichment.R")
+source("Scripts/CategoryEnrichment.R")
 
 # Categorize lengths of CpG islands.
 thresholds <- quantile(annotations$CpG_Length[annotations$CpG_Length!=0 & !is.na(annotations$CpG_Length)], c(0.20, 0.80))

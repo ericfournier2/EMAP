@@ -30,12 +30,12 @@ fi
 
 
 # Generate both transcriptomic and epigenetic analysis
-Rscript main.R "$EPIGENETIC_NAME" "$EPIGENETIC_TARGET" "$EPIGENETIC_FOLDER" \
-               "$TRANSCRIPTOMIC_NAME" "$TRANSCRIPTOMIC_TARGET" "$TRANSCRIPTOMIC_FOLDER" \
-               "$REFERENCE_CONDITION" "$COMBINED_NAME" \
-               $EPI_FOLDCHANGE_THRESHOLD $EPI_PVALUE_THRESHOLD \
-               $TRANS_FOLDCHANGE_THRESHOLD $TRANS_PVALUE_THRESHOLD \
-               $VERSION
+Rscript Scripts/main.R "$EPIGENETIC_NAME" "$EPIGENETIC_TARGET" "$EPIGENETIC_FOLDER" \
+                       "$TRANSCRIPTOMIC_NAME" "$TRANSCRIPTOMIC_TARGET" "$TRANSCRIPTOMIC_FOLDER" \
+                       "$REFERENCE_CONDITION" "$COMBINED_NAME" \
+                       $EPI_FOLDCHANGE_THRESHOLD $EPI_PVALUE_THRESHOLD \
+                       $TRANS_FOLDCHANGE_THRESHOLD $TRANS_PVALUE_THRESHOLD \
+                       $VERSION
 rc=$?
 if [[ $rc != 0 ]]
 then
@@ -44,7 +44,7 @@ then
 fi
                
                
-perl IPAInput.pl Annotations/$VERSION/EDMA.Annotation.txt "Results/$EPIGENETIC_NAME/Limma Analysis/LimmaAnalysis.txt" > "Results/$EPIGENETIC_NAME/IPA.txt"
+perl Scripts/IPAInput.pl Annotations/$VERSION/EDMA.Annotation.txt "Results/$EPIGENETIC_NAME/Limma Analysis/LimmaAnalysis.txt" > "Results/$EPIGENETIC_NAME/IPA.txt"
                
 # Create circos input data structure
 NAME_EPI=`sed "s/\//./g" <(echo "$EPIGENETIC_NAME")`
