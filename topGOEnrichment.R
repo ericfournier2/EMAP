@@ -88,7 +88,7 @@ moduleMembershipSelect <- function(x) {
 #   A list of three elements, one for each ontology (BP, CC, MF). See innerTopGO for the structure
 #   of each individual element.
 performTopGOEnrichment <- function(chosenProbes, subsetOfProbes, outputFilename, platform="Epigenetic", 
-                                   probeScores=NULL, probeSelectionFun=NULL, scoreOrder="increasing", ) {
+                                   probeScores=NULL, probeSelectionFun=NULL, scoreOrder="increasing") {
     # Make sure the inputs are correct.
     if(!all(chosenProbes %in% subsetOfProbes)) {
         stop("Error: Chosen probes are not all part of the given subset")
