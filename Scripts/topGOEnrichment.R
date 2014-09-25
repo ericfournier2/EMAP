@@ -33,16 +33,17 @@ innerTopGo <- function(ontology, allGenes, goSubset, statistic, outputFilename, 
     topGODataObj <- new("topGOdata", ontology=ontology, allGenes = allGenes, annotationFun=annFUN.gene2GO, gene2GO=goSubset, nodeSize=5, ...)
     
     # Perform the enrichment analysis.
-    testResult <- runTest(topGODataObj, algorithm="weight01", statistic=statistic)
+    testResultWeight <- runTest(topGODataObj, algorithm="weight01", statistic=statistic)
+    testResultClassic <- runTest(topGODataObj, algorithm="classic", statistic=statistic)
     
     # Generate graph of top enriched terms.
-    printGraph(topGODataObj, testResult, firstSigNodes = 5, fn.prefix = paste(ontology, outputFilename), useInfo = "all", pdfSW = TRUE)
+    printGraph(topGODataObj, testResultClassic, firstSigNodes = 5, fn.prefix = paste(ontology, outputFilename), useInfo = "all", pdfSW = TRUE)
     
     # Generate a summary table of the enriched terms and write it out.
-    summaryTable <- GenTable(topGODataObj, test=testResult, orderBy="test", ranksOf="test", topNodes=length(score(testResult)), numChar=2000)
+    summaryTable <- GenTable(topGODataObj, Weight=testResultWeight, Classic=testResultClassic, orderBy="Classic", ranksOf="Classic", topNodes=length(score(testResultClassic)), numChar=2000)
     write.table(summaryTable, file=paste(ontology, " ", outputFilename, ".txt", sep=""), row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
     
-    return(list(Data=topGODataObj, Test=testResult, Table=summaryTable))
+    return(list(Data=topGODataObj, Test=testResultClassic, Table=summaryTable))
 }
 
 # For use with performTopGOEnrichment as a probeSelectionFun function.
