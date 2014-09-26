@@ -193,9 +193,20 @@ if(epigenetic_Name!="") {
     # Perform hot-spot detection.
     hotSpots <- doHotSpotDetection(limmaResults$Fit, annotation)
     write.table(hotSpots, file="HotSpots.txt", quote=FALSE, row.names=FALSE, col.names=TRUE)
-    generateSpatialFCProfile(limmaResults$Fit, annotation,
-                             filename="Spatial chromosome FC Analysis",
-                             chromosomes=paste("chr", c(1:9, "X"), sep=""))
+
+    dir.create("Spatial analysis")
+    setwd("Spatial analysis")
+    tryCatch( {
+        generateSpatialFCProfile(limmaResults$Fit, annotation,
+                                 filename="Spatial chromosome PVal Analysis",
+                                 chromosomes="All")
+        generateSpatialPValProfile(limmaResults$Fit, annotation,
+                                   filename="Spatial chromosome PVal Analysis",
+                                   chromosomes="All")
+        getChromosomeDMRatio(limmaResults$DiffExpr, annotation)
+    }, finally= {
+        setwd("..")
+    })
     
     # Return to the old working directory.
     setwd(oldWD)
