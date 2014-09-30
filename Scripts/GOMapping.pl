@@ -46,7 +46,7 @@ foreach my $probe (keys %{$edmaAnnotations}) {
     
     my @uniqGOIDs = ();
     my @egGOIDs = ();    
-    if(substr($probe, 0, 8) eq "EDMA_MET") {
+    if(substr($probe, 0, 8) eq "EDMA_MET" || substr($probe, 0, 5) eq "GT_HQ" || substr($probe, 0, 5) eq "GT_LQ") {
         # Get a list of non-redundant gene symbols for this probe.
         my @symbolsAll = ( split(" ", $edmaAnnotations->{$probe}->{"Proximal_Promoter"}),
                            split(" ", $edmaAnnotations->{$probe}->{"Promoter"}), 
