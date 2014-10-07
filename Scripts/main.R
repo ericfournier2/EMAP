@@ -43,6 +43,16 @@ if(!exists("VERSION")) {
     VERSION <- "v2"
 }
 
+# Define some paths that might be used by sub-scripts to load ressources.
+annotationFolder <- file.path("Annotations", VERSION)
+dir.create(file.path(getwd(), "Annotations", "KEGG"), showWarnings=FALSE)
+annotationKEGG <- file.path(getwd(), "Annotations", "KEGG")
+divergentScalePath <- file.path(getwd(), "Annotations", "DivergenceScaleNoLabel.png")
+
+# Determine path of pre-computed gene indices/counts
+geneMapPath <- file.path(file.path(getwd(), annotationFolder, "GeneMap.txt"))
+probeGeneIDPath <- file.path(getwd(), annotationFolder, "ProbeGeneIDs.txt")
+
 library(limma)
 
 # Load all utility files.
@@ -113,15 +123,6 @@ writeEnrichmentData <- function(enrich, folder, relativeOnly) {
     
     setwd(previousWD)
 }
-
-annotationFolder <- file.path("Annotations", VERSION)
-dir.create(file.path(getwd(), "Annotations", "KEGG"), showWarnings=FALSE)
-annotationKEGG <- file.path(getwd(), "Annotations", "KEGG")
-divergentScalePath <- file.path(getwd(), "Annotations", "DivergenceScaleNoLabel.png")
-
-# Determine path of pre-computed gene indices/counts
-geneMapPath <- file.path(file.path(getwd(), annotationFolder, "GeneMap.txt"))
-probeGeneIDPath <- file.path(getwd(), annotationFolder, "ProbeGeneIDs.txt")
 
 ###################################################################################################
 #                                     Epigenetic Analysis                                         #

@@ -3,8 +3,53 @@
 library(GO.db)
 library(topGO)
 
-probe2goEpi <- readMappings(file.path("Annotations", VERSION, "GO_Filtered.map"))
+probe2goEpi <- readMappings(file.path(annotationFolder, "GO_Filtered.map"))
 probe2goTrans <- readMappings("Annotations/probe2go.map")
+epiSymbols <- read.table(file.path(annotationFolder, "ProbeSymbol.mapping"), sep="\t", header=TRUE)
+
+conditionalPastePrefix = function(x, y) {
+    val <- sub("^\\s+", "", x)
+    val <- val[val!=""]
+    if(length(val) > 0) {
+        return(paste(y, "-", val, sep="", collapse=","))
+    } else {
+        return("")
+    }
+}
+
+conditionalPaste = function(x) {
+    x <- x[x!=""]
+    if(length(x) > 0) {
+        return(paste(x, sep="", collapse=","))
+    } else {
+        return("")
+    }
+}
+
+# Generates a direct mapping between probes and all symbols they are associated with.
+# This can be saved, and used later when associating the significant DMR probes within
+# a GO term to the genes they target.
+generateEpiProbeSymbolMapping <- function() {
+    # List all relevant annotation columns.
+    columnsOfInterest <- c("Proximal_Promoter", "Promoter", "Exon", "Intron")
+    
+    # Prepare a matrix which can contain the processed content of each column,
+    newMat <- matrix("", nrow=nrow(annotation), ncol=length(columnsOfInterest))
+    colnames(newMat) <- columnsOfInterest
+    
+    # Add an appropriate prefix to all gene names.
+    for(i in columnsOfInterest) {
+        splitGenes = strsplit(as.character(annotation[,i]), " ")
+        newMat[,i] = unlist(lapply(splitGenes, conditionalPastePrefix, i))
+    }
+    
+    # Concatenate all symbols into a single string.
+    finalSymbols <- apply(newMat, 1, conditionalPaste)
+    finalDF <- data.frame(Probe=annotation$Probe, Gene_Symbol=finalSymbols, stringsAsFactors=FALSE)
+    
+    # Output the generate data-frame.
+    write.table(finalDF, file.path(annotationFolder, "ProbeSymbol.mapping"), sep="\t", col.names=TRUE, row.names=FALSE, quote=FALSE)
+}
 
 # Performs the actual calls to topGO to perform the enrichment analysis.
 # Parameters:
@@ -28,7 +73,7 @@ probe2goTrans <- readMappings("Annotations/probe2go.map")
 #       Data: The topGOdata object.
 #       Test: The result of the runTest function.
 #       Table: The summary table provided by the GenTable method.
-innerTopGo <- function(ontology, allGenes, goSubset, statistic, outputFilename, ...) {
+innerTopGo <- function(ontology, allGenes, goSubset, statistic, outputFilename, symbolAnnotation, ...) {
     # Create the topGO data object, which contains the selected subset, the universe subset, gene scores, etc.
     topGODataObj <- new("topGOdata", ontology=ontology, allGenes = allGenes, annotationFun=annFUN.gene2GO, gene2GO=goSubset, nodeSize=5, ...)
     
@@ -43,6 +88,21 @@ innerTopGo <- function(ontology, allGenes, goSubset, statistic, outputFilename, 
     summaryTable <- GenTable(topGODataObj, Weight=testResultWeight, Classic=testResultClassic, orderBy="Classic", ranksOf="Classic", topNodes=length(score(testResultClassic)), numChar=2000)
     write.table(summaryTable, file=paste(ontology, " ", outputFilename, ".txt", sep=""), row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
     
+    # Generate lists of "significant" probes for each GO term
+    allGenesInTerms <- genesInTerm(topGODataObj)
+    allSigGenes <- sigGenes(topGODataObj)
+    
+    sigGenesInTerms <- lapply(allGenesInTerms, function(x) { x[x %in% allSigGenes] })
+    
+    sigGenesInTermsDF <- data.frame(GO=names(sigGenesInTerms), Probes="", Genes="", stringsAsFactors=FALSE)
+    for(i in 1:length(sigGenesInTerms)) {
+        goTerm = names(sigGenesInTerms)[i]
+        probes = paste(sigGenesInTerms[[i]], collapse=",")
+        genes = paste(symbolAnnotation$Gene_Symbol[match(sigGenesInTerms[[i]], symbolAnnotation$Probe)], collapse=",")
+        sigGenesInTermsDF[i,] <- data.frame(GO=goTerm, Probes= probes, Genes=genes, stringsAsFactors=FALSE)
+    }
+    write.table(sigGenesInTermsDF, file=paste(ontology, " - significant genes per term - ", outputFilename, ".txt", sep=""), row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
+
     return(list(Data=topGODataObj, Test=testResultClassic, Table=summaryTable))
 }
 
@@ -91,12 +151,21 @@ moduleMembershipSelect <- function(x) {
 performTopGOEnrichment <- function(chosenProbes, subsetOfProbes, outputFilename, platform="Epigenetic", 
                                    probeScores=NULL, probeSelectionFun=NULL, scoreOrder="increasing") {
     # Make sure the inputs are correct.
+    if(!(platform %in% c("Epigenetic", "Transcriptomic"))) {
+        stop("Error: Platform must be either 'Epigenetic' or 'Transcriptomic'")
+    }
+
     if(!all(chosenProbes %in% subsetOfProbes)) {
         stop("Error: Chosen probes are not all part of the given subset")
     }
-    
-    if(!all(as.character(subsetOfProbes) %in% as.character(annotation$Probe))) {
-        stop("Error: Given probe subset is invalid.")
+    if(platform=="Epigenetic") {
+        if(!all(as.character(subsetOfProbes) %in% as.character(annotation$Probe))) {
+            stop("Error: Given probe subset is invalid.")
+        }
+    } else {
+        if(!all(as.character(subsetOfProbes) %in% as.character(annotationTrans$Probe))) {
+            stop("Error: Given probe subset is invalid.")
+        }    
     }
     
     if(length(unique(chosenProbes)) != length(chosenProbes)) {
@@ -107,17 +176,15 @@ performTopGOEnrichment <- function(chosenProbes, subsetOfProbes, outputFilename,
         stop("Error: duplicated probes in subsetOfProbes")
     }
     
-    if(!(platform %in% c("Epigenetic", "Transcriptomic"))) {
-        stop("Error: Platform must be either 'Epigenetic' or 'Transcriptomic'")
-    }
-    
     cat(paste("Selected ", length(chosenProbes), " out of ", length(subsetOfProbes), ".\n", sep=""))
 
     # Switch annotations depending on the platform.
     if(platform=="Epigenetic") {
         probe2go <- probe2goEpi
+        symbolAnnotation <- epiSymbols
     } else {
         probe2go <- probe2goTrans
+        symbolAnnotation <- annotationTrans
     }
     
     # Subset probes so that only those with GO annotations are used for the analysis.
@@ -142,7 +209,7 @@ performTopGOEnrichment <- function(chosenProbes, subsetOfProbes, outputFilename,
     # Perform enrichment on all ontologies.
     results <- list()
     for(ontology in c("BP", "MF", "CC")) {        
-        results[[ontology]] <- innerTopGo(ontology, probeScores, goSubset, stat, paste(ontology, outputFilename),  geneSelectionFun=probeSelectionFun)
+        results[[ontology]] <- innerTopGo(ontology, probeScores, goSubset, stat, paste(ontology, outputFilename),  symbolAnnotation, geneSelectionFun=probeSelectionFun)
     }
     return(results)
 }
@@ -170,7 +237,7 @@ compareTopGOSets <- function(enrichmentList, inclusionThreshold=0.001) {
         for(ontology in c("BP", "CC", "MF")) {
             # Fetch the enrichment results from the input list structure.
             resTable <- enrichmentList[[module]][[ontology]]$Table
-            testResults <- -log10(as.numeric(resTable$test))
+            testResults <- -log10(as.numeric(resTable$Weight))
 
             if(firstLoop) {
                 # On the first iteration of the loop, create a new data frame in the enrichmentDFList.
