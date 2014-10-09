@@ -26,7 +26,7 @@ listAboveBG <- function(intensityData, targetData, reference_Condition) {
 }
 
 subsetFit <- function(fitObject, indices) {
-    return(data.frame(ID=fitObject$genes$ID, Coef=fitObject$coefficients, PVal=fitObject$p.value)[indices,])
+    return(data.frame(ID=fitObject$genes$ID, Coef=as.vector(fitObject$coefficients), PVal=as.vector(fitObject$p.value))[indices,])
 }
 
 # Perform differential methylation analysis using the Limma package.

@@ -157,7 +157,6 @@ generateSpatialFCProfile <- function(fitData, annotationData,
     }
 
     # Write down the results in a file.
-
     write.table(modelDF, file=paste(filename, ".txt", sep=""), sep="\t", col.names=TRUE, row.names=FALSE, quote=FALSE)
 }
 
@@ -198,372 +197,56 @@ generateSpatialPValProfile <- function(fitData, annotationData,
     }
 }
 
-generateSpatialFCProfile2 <- function(fitData, annotationData,
-                                     windowSize=10000000, stepSize=500000,
-                                     pValThreshold=1, fcThreshold=0,
-                                     filename="",
-                                     chromosomes=c("All")) {
-    # Reorder annotations by their chromosome/start position.
-    annotations <- annotationData[order(annotationData$Chromosome, annotationData$Fragment_Start),]
-    
-    # Match annotations and Fit probes, then get them together in a single matrix.
-	matchIDs <- match(annotations$Probe, fitData$genes$ID)
-	annotFit <- data.frame(Chr=annotations$Chromosome,
-                           Start=annotations$Fragment_Start,
-                           End=annotations$Fragment_End,
-                           FC=fitData$coefficients[matchIDs],
-                           PVal=fitData$p.value[matchIDs])
-                           
-    # Remove probes with undefined coordinates.
-    annotFit <- annotFit[!is.na(annotFit$Start),]
-    
-    # We'll accumulate results in a data-frame.
-    modelDF <- data.frame(Chr=character(0),     # The chromosome of the window 
-                          Start=numeric(0),     # The start position of the window (in bp)
-                          End=numeric(0),       # The end position of the window (in bp)
-                          MeanPos=numeric(0),   # The middle position of the window (in bp)
-                          MeanPerc=numeric(0),  # The relative position (in percentage) of the middle of the window 
-                          FC=numeric(0))        # The average fold-change over the window
-
-    # Process special chromosomes value.
-    if("All" %in% chromosomes) {
-        chromosomes <- unique(annotFit$Chr)
-    }
-    
-    # Loop over all chromosomes:
-    for(chr in unique(chromosomes)) {
-        # Keep only the relevant probes.
-        chrFit <- annotFit[annotFit$Chr==chr & abs(annotFit$FC) > fcThreshold & annotFit$PVal < pValThreshold,]
-        
-        # Reset window position, and define maximum window bound.
-        lowerBound = 0
-        maxBound = max(chrFit$End, na.rm=TRUE)
-        
-        # Iterate over the full chromosome length. Stop when the upper bound reaches the chromosome's end.
-        while(lowerBound + windowSize < maxBound) {
-            upperBound = lowerBound + windowSize
-        
-            # Determine which probes fall within our window, and average the fold-changes..
-            probesInRange <- chrFit$Start >= lowerBound & chrFit$End <= upperBound
-            meanFC = mean(chrFit$FC[probesInRange], na.rm=TRUE)
-            middlePos = (lowerBound+upperBound)/2
-            
-            # Append the new entry to the data frame.
-            newRow = data.frame(Chr=chr,
-                                Start=lowerBound,
-                                End=upperBound,
-                                Mean=middlePos,
-                                MeanPerc=middlePos/maxBound,
-                                FC=meanFC)
-            modelDF <- rbind(modelDF, newRow)
-        
-            # Move our window downstream.
-            lowerBound = lowerBound + stepSize
-        }
-    }
-
-    # Reorder/rename chromosomes.
-    modelDF$Chr <- gsub("chr", "", modelDF$Chr)
-    modelDF$Chr <- factor(modelDF$Chr, levels=c(1:29, "X"))
-
-    # Generate a loess curve fitting the data average.
-    loessObj <- loess(modelDF$FC ~ modelDF$MeanPerc, degree=2)
-    loessPred <- predict(loessObj, seq(0, 1, by=0.01))  
-    loessPredDF <- data.frame(Loess=loessPred, X=seq(0, 1, by=0.01))
-    
-    # Plot it.
-    ggplot() +
-        geom_hline(y=0) +
-        geom_line(data=modelDF, mapping=aes(x=MeanPerc, y=FC, color=Chr)) +
-        geom_line(data=loessPredDF, mapping=aes(y=Loess, x=X), color="black", linetype="dashed", width=2) +
-        ylab(paste("Average log2(fold-change) over", windowSize/1000000, "Mbp window")) +
-        xlab("Relative position on chromosome") +
-        scale_colour_discrete(name="Chromosome")
-
-    ggsave(paste(filename, " - All.tiff", sep=""), width=14, height=7, dpi=600, compression="lzw")
-        
-    for(chr in unique(modelDF$Chr)) {
-        chrFit <-  annotFit[annotFit$Chr==paste("chr", chr, sep=""),]
-        sigProbes <- chrFit[abs(annotFit$FC) > log2(1.5) & annotFit$PVal < 0.05,]
-        maxBound = max(chrFit$End, na.rm=TRUE)
-        sigProbes$StartPerc <- sigProbes$Start / maxBound
-        
-        maxWindowFC = max(abs(modelDF$FC[modelDF$Chr==chr]), na.rm=TRUE)
-        maxSigFC = max(abs(sigProbes$FC), na.rm=TRUE)
-        sigProbes$FC = sigProbes$FC*maxWindowFC/maxSigFC
-                
-                
-        print(sigProbes)
-        
-        ggplot() +
-            geom_hline(y=0) +
-            geom_point(data=sigProbes, mapping=aes(y=FC, x=StartPerc)) +
-            geom_line(data=modelDF[modelDF$Chr==chr,], mapping=aes(x=MeanPerc, y=FC, color=Chr)) +
-            geom_line(data=loessPredDF, mapping=aes(y=Loess, x=X), color="black", linetype="dashed", width=2) +
-            ylim(c(-maxWindowFC*1.1, maxWindowFC*1.1)) +
-            ylab(paste("Average log2(fold-change) over", windowSize/1000000, "Mbp window")) +
-            xlab("Relative position on chromosome") +
-            scale_colour_discrete(name="Chromosome")    
-        ggsave(paste(filename, " - ", chr, ".tiff", sep=""), width=14, height=7, dpi=600, compression="lzw")            
-    }
-
-    # Write down the results in a file.
-
-    write.table(modelDF, file=paste(filename, ".txt", sep=""), sep="\t", col.names=TRUE, row.names=FALSE, quote=FALSE)
-}
-
-
-generateSpatialFCProfile2 <- function(fitData, annotationData,
-                                     windowSize=10000000, stepSize=500000,
-                                     pValThreshold=1, fcThreshold=0,
-                                     filename="",
-                                     chromosomes=c("All")) {
-    # Reorder annotations by their chromosome/start position.
-    annotations <- annotationData[order(annotationData$Chromosome, annotationData$Fragment_Start),]
-    
-    # Match annotations and Fit probes, then get them together in a single matrix.
-	matchIDs <- match(annotations$Probe, fitData$genes$ID)
-	annotFit <- data.frame(Chr=annotations$Chromosome,
-                           Start=annotations$Fragment_Start,
-                           End=annotations$Fragment_End,
-                           FC=fitData$coefficients[matchIDs],
-                           PVal=fitData$p.value[matchIDs])
-                           
-    # Remove probes with undefined coordinates.
-    annotFit <- annotFit[!is.na(annotFit$Start),]
-    
-    # We'll accumulate results in a data-frame.
-    modelDF <- data.frame(Chr=character(0),     # The chromosome of the window 
-                          Start=numeric(0),     # The start position of the window (in bp)
-                          End=numeric(0),       # The end position of the window (in bp)
-                          MeanPos=numeric(0),   # The middle position of the window (in bp)
-                          MeanPerc=numeric(0),  # The relative position (in percentage) of the middle of the window 
-                          FC=numeric(0))        # The average fold-change over the window
-
-    # Process special chromosomes value.
-    if("All" %in% chromosomes) {
-        chromosomes <- unique(annotFit$Chr)
-    }
-    
-    # Loop over all chromosomes:
-    for(chr in unique(chromosomes)) {
-        # Keep only the relevant probes.
-        chrFit <- annotFit[annotFit$Chr==chr & abs(annotFit$FC) > fcThreshold & annotFit$PVal < pValThreshold,]
-        
-        # Reset window position, and define maximum window bound.
-        lowerBound = 0
-        maxBound = max(chrFit$End, na.rm=TRUE)
-        
-        # Iterate over the full chromosome length. Stop when the upper bound reaches the chromosome's end.
-        while(lowerBound + windowSize < maxBound) {
-            upperBound = lowerBound + windowSize
-        
-            # Determine which probes fall within our window, and average the fold-changes..
-            probesInRange <- chrFit$Start >= lowerBound & chrFit$End <= upperBound
-            meanFC = mean(chrFit$FC[probesInRange], na.rm=TRUE)
-            middlePos = (lowerBound+upperBound)/2
-            
-            # Append the new entry to the data frame.
-            newRow = data.frame(Chr=chr,
-                                Start=lowerBound,
-                                End=upperBound,
-                                Mean=middlePos,
-                                MeanPerc=middlePos/maxBound,
-                                FC=meanFC)
-            modelDF <- rbind(modelDF, newRow)
-        
-            # Move our window downstream.
-            lowerBound = lowerBound + stepSize
-        }
-    }
-
-    # Reorder/rename chromosomes.
-    modelDF$Chr <- gsub("chr", "", modelDF$Chr)
-    modelDF$Chr <- factor(modelDF$Chr, levels=c(1:29, "X"))
-
-    # Generate a loess curve fitting the data average.
-    loessObj <- loess(modelDF$FC ~ modelDF$MeanPerc, degree=2)
-    loessPred <- predict(loessObj, seq(0, 1, by=0.01))  
-    loessPredDF <- data.frame(Loess=loessPred, X=seq(0, 1, by=0.01))
-    
-    # Plot it.
-    ggplot() +
-        geom_hline(y=0) +
-        geom_line(data=modelDF, mapping=aes(x=MeanPerc, y=FC, color=Chr)) +
-        geom_line(data=loessPredDF, mapping=aes(y=Loess, x=X), color="black", linetype="dashed", width=2) +
-        ylab(paste("Average log2(fold-change) over", windowSize/1000000, "Mbp window")) +
-        xlab("Relative position on chromosome") +
-        scale_colour_discrete(name="Chromosome")
-
-    ggsave(paste(filename, " - All.tiff", sep=""), width=14, height=7, dpi=600, compression="lzw")
-        
-    for(chr in unique(modelDF$Chr)) {
-        chrFit <-  annotFit[annotFit$Chr==paste("chr", chr, sep=""),]
-        sigProbes <- chrFit[abs(annotFit$FC) > log2(1.5) & annotFit$PVal < 0.05,]
-        maxBound = max(chrFit$End, na.rm=TRUE)
-        sigProbes$StartPerc <- sigProbes$Start / maxBound
-        
-        maxWindowFC = max(abs(modelDF$FC[modelDF$Chr==chr]), na.rm=TRUE)
-        maxSigFC = max(abs(sigProbes$FC), na.rm=TRUE)
-        sigProbes$FC = sigProbes$FC*maxWindowFC/maxSigFC
-                
-                
-        print(sigProbes)
-        
-        ggplot() +
-            geom_hline(y=0) +
-            geom_point(data=sigProbes, mapping=aes(y=FC, x=StartPerc)) +
-            geom_line(data=modelDF[modelDF$Chr==chr,], mapping=aes(x=MeanPerc, y=FC, color=Chr)) +
-            geom_line(data=loessPredDF, mapping=aes(y=Loess, x=X), color="black", linetype="dashed", width=2) +
-            ylim(c(-maxWindowFC*1.1, maxWindowFC*1.1)) +
-            ylab(paste("Average log2(fold-change) over", windowSize/1000000, "Mbp window")) +
-            xlab("Relative position on chromosome") +
-            scale_colour_discrete(name="Chromosome")    
-        ggsave(paste(filename, " - ", chr, ".tiff", sep=""), width=14, height=7, dpi=600, compression="lzw")            
-    }
-
-    # Write down the results in a file.
-
-    write.table(modelDF, file=paste(filename, ".txt", sep=""), sep="\t", col.names=TRUE, row.names=FALSE, quote=FALSE)
-}
-
-
+# Calculates the ratio of DM probes to total probes for each chromosome.
 getChromosomeDMRatio <- function(diffExpr, annotationData) {
 
-    results <- data.frame(Chromosome=character(0), TotalProbes=numeric(0), DMProbes=numeric(0), Ratio=numeric(0))
-
+    # Calculate overall DM and hyper-methylation rates.
+    overallDMRate <- nrow(diffExpr) / nrow(annotation)
+    overallHyperRate <- sum(diffExpr$Coef > 0)/nrow(diffExpr)
+    
+    # Loop over all chromosomes and accumulate chromosome-specific DM/hypermethylation rates.
+    results <- data.frame(Chromosome=character(0), TotalProbes=numeric(0),
+                          DMProbes=numeric(0), Ratio=numeric(0), DMEnrichment=numeric(0),
+                          HyperRate=numeric(0), HyperEnrichment=numeric(0))
     for(chr in unique(annotationData$Chromosome)) {
         if(chr != "") {
-            thisChr <- annotationData$Chromosome==chr
-            total <- sum(thisChr, na.rm=TRUE)
-            dm <- sum(diffExpr$ID %in% annotationData$Probe[thisChr], na.rm=TRUE)
+            # Determine which probes lie on this chromosome, and how many there are.
+            thisChr = annotationData$Chromosome==chr
+            total = sum(thisChr, na.rm=TRUE)
             
-            results <- rbind(results, data.frame(Chromosome=chr, TotalProbes=total, DMProbes=dm, Ratio=dm/total))
+            # Determine how many of these are DMRs.
+            dmrOnChr <- diffExpr$ID %in% annotationData$Probe[thisChr]
+            dm = sum(dmrOnChr, na.rm=TRUE)
+            ratio = dm/total
+            dmEnrichment = log2(ratio/overallDMRate)
+            
+            # Determine how many of these are hypermethylated.
+            hyperProbes = sum(diffExpr$Coef[dmrOnChr] > 0, na.rm=TRUE)
+            hyperRate = hyperProbes / dm
+            hyperEnrichment = log2(hyperRate/overallHyperRate)
+            
+            results <- rbind(results, data.frame(Chromosome=chr, TotalProbes=total,
+                                                 DMProbes=dm, DMRatio=ratio, DMEnrichment=dmEnrichment,
+                                                 HyperProbes=hyperProbes, HyperRatio=hyperRate, HyperEnrichment=hyperEnrichment))
         }
     }
     
-
+    # Plot DM ratios.
     ggplot(data=results) +
-        geom_bar(mapping=aes(x=Chromosome, y=Ratio), stat="identity") +
-        geom_hline(y=mean(results$Ratio), linetype="dashed", color="red") +
+        geom_bar(mapping=aes(x=Chromosome, y=DMRatio), stat="identity") +
+        geom_hline(y=overallDMRate, linetype="dashed", color="red") +
         theme(axis.text.x = element_text(angle = 45, hjust=1))
-    
     ggsave("Chromosome DM Ratio.tiff", compression="lzw", dpi=600)
+    
+    # Plot Hyper-methylation ratios.
+    ggplot(data=results) +
+        geom_bar(mapping=aes(x=Chromosome, y=HyperRatio), stat="identity") +
+        geom_hline(y=overallHyperRate, linetype="dashed", color="red") +
+        theme(axis.text.x = element_text(angle = 45, hjust=1))
+    ggsave("Chromosome Hyper Ratio.tiff", compression="lzw", dpi=600)
+    
     write.table(results, file="Chromosome DM Ratio.txt", sep="\t", row.names=FALSE, col.names=TRUE, quote=FALSE)
     
     return(results)
 }
     
-generateSpatialFCProfile2 <- function(fitData, annotationData,
-                                     windowSize=10000000, stepSize=500000,
-                                     pValThreshold=1, fcThreshold=0,
-                                     filename="",
-                                     chromosomes=c("All")) {
-    # Reorder annotations by their chromosome/start position.
-    annotations <- annotationData[order(annotationData$Chromosome, annotationData$Fragment_Start),]
-    
-    # Match annotations and Fit probes, then get them together in a single matrix.
-	matchIDs <- match(annotations$Probe, fitData$genes$ID)
-	annotFit <- data.frame(Chr=annotations$Chromosome,
-                           Start=annotations$Fragment_Start,
-                           End=annotations$Fragment_End,
-                           FC=fitData$coefficients[matchIDs],
-                           PVal=fitData$p.value[matchIDs])
-                           
-    # Remove probes with undefined coordinates.
-    annotFit <- annotFit[!is.na(annotFit$Start),]
-    
-    # We'll accumulate results in a data-frame.
-    modelDF <- data.frame(Chr=character(0),     # The chromosome of the window 
-                          Start=numeric(0),     # The start position of the window (in bp)
-                          End=numeric(0),       # The end position of the window (in bp)
-                          MeanPos=numeric(0),   # The middle position of the window (in bp)
-                          MeanPerc=numeric(0),  # The relative position (in percentage) of the middle of the window 
-                          FC=numeric(0))        # The average fold-change over the window
-
-    # Process special chromosomes value.
-    if("All" %in% chromosomes) {
-        chromosomes <- unique(annotFit$Chr)
-    }
-    
-    # Loop over all chromosomes:
-    for(chr in unique(chromosomes)) {
-        # Keep only the relevant probes.
-        chrFit <- annotFit[annotFit$Chr==chr & abs(annotFit$FC) > fcThreshold & annotFit$PVal < pValThreshold,]
-        
-        # Reset window position, and define maximum window bound.
-        lowerBound = 0
-        maxBound = max(chrFit$End, na.rm=TRUE)
-        
-        # Iterate over the full chromosome length. Stop when the upper bound reaches the chromosome's end.
-        while(lowerBound + windowSize < maxBound) {
-            upperBound = lowerBound + windowSize
-        
-            # Determine which probes fall within our window, and average the fold-changes..
-            probesInRange <- chrFit$Start >= lowerBound & chrFit$End <= upperBound
-            meanFC = mean(chrFit$FC[probesInRange], na.rm=TRUE)
-            middlePos = (lowerBound+upperBound)/2
-            
-            # Append the new entry to the data frame.
-            newRow = data.frame(Chr=chr,
-                                Start=lowerBound,
-                                End=upperBound,
-                                Mean=middlePos,
-                                MeanPerc=middlePos/maxBound,
-                                FC=meanFC)
-            modelDF <- rbind(modelDF, newRow)
-        
-            # Move our window downstream.
-            lowerBound = lowerBound + stepSize
-        }
-    }
-
-    # Reorder/rename chromosomes.
-    modelDF$Chr <- gsub("chr", "", modelDF$Chr)
-    modelDF$Chr <- factor(modelDF$Chr, levels=c(1:29, "X"))
-
-    # Generate a loess curve fitting the data average.
-    loessObj <- loess(modelDF$FC ~ modelDF$MeanPerc, degree=2)
-    loessPred <- predict(loessObj, seq(0, 1, by=0.01))  
-    loessPredDF <- data.frame(Loess=loessPred, X=seq(0, 1, by=0.01))
-    
-    # Plot it.
-    ggplot() +
-        geom_hline(y=0) +
-        geom_line(data=modelDF, mapping=aes(x=MeanPerc, y=FC, color=Chr)) +
-        geom_line(data=loessPredDF, mapping=aes(y=Loess, x=X), color="black", linetype="dashed", width=2) +
-        ylab(paste("Average log2(fold-change) over", windowSize/1000000, "Mbp window")) +
-        xlab("Relative position on chromosome") +
-        scale_colour_discrete(name="Chromosome")
-
-    ggsave(paste(filename, " - All.tiff", sep=""), width=14, height=7, dpi=600, compression="lzw")
-        
-    for(chr in unique(modelDF$Chr)) {
-        chrFit <-  annotFit[annotFit$Chr==paste("chr", chr, sep=""),]
-        sigProbes <- chrFit[abs(annotFit$FC) > log2(1.5) & annotFit$PVal < 0.05,]
-        maxBound = max(chrFit$End, na.rm=TRUE)
-        sigProbes$StartPerc <- sigProbes$Start / maxBound
-        
-        maxWindowFC = max(abs(modelDF$FC[modelDF$Chr==chr]), na.rm=TRUE)
-        maxSigFC = max(abs(sigProbes$FC), na.rm=TRUE)
-        sigProbes$FC = sigProbes$FC*maxWindowFC/maxSigFC
-                
-                
-        print(sigProbes)
-        
-        ggplot() +
-            geom_hline(y=0) +
-            geom_point(data=sigProbes, mapping=aes(y=FC, x=StartPerc)) +
-            geom_line(data=modelDF[modelDF$Chr==chr,], mapping=aes(x=MeanPerc, y=FC, color=Chr)) +
-            geom_line(data=loessPredDF, mapping=aes(y=Loess, x=X), color="black", linetype="dashed", width=2) +
-            ylim(c(-maxWindowFC*1.1, maxWindowFC*1.1)) +
-            ylab(paste("Average log2(fold-change) over", windowSize/1000000, "Mbp window")) +
-            xlab("Relative position on chromosome") +
-            scale_colour_discrete(name="Chromosome")    
-        ggsave(paste(filename, " - ", chr, ".tiff", sep=""), width=14, height=7, dpi=600, compression="lzw")            
-    }
-
-    # Write down the results in a file.
-
-    write.table(modelDF, file=paste(filename, ".txt", sep=""), sep="\t", col.names=TRUE, row.names=FALSE, quote=FALSE)
-}
