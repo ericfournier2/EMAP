@@ -12,7 +12,7 @@ options(error= function() { traceback(2); quit(save="no", status=ERROR_UNKNOWN)}
 # Parse command line arguments if values were not provided through an OPEN_ME script.
 if(!exists("epigenetic_Name")) {
     parameters <- commandArgs(trailingOnly = TRUE)
-    if(length(parameters) != 13) {
+    if(length(parameters) != 15) {
         quit(save="no", status = ERROR_INVALID_NUMBER_OF_ARGUMENTS);
     }
     
@@ -30,11 +30,13 @@ if(!exists("epigenetic_Name")) {
     
     epi_foldchange_Threshold <- log2(as.numeric(parameters[9]))
     epi_pvalue_Threshold <- as.numeric(parameters[10])
+    epi_pvalue_Adjusted <- as.logical(parameters[11])
     
-    trans_foldchange_Threshold <- log2(as.numeric(parameters[11]))
-    trans_pvalue_Threshold <- as.numeric(parameters[12])
+    trans_foldchange_Threshold <- log2(as.numeric(parameters[12]))
+    trans_pvalue_Threshold <- as.numeric(parameters[13])
+    trans_pvalue_Adjusted <- as.logical(parameters[14])
     
-    VERSION <- parameters[13]
+    VERSION <- parameters[15]
 }
 
 # There are only a handful of v1 project so by default, if those projects didn't
@@ -144,7 +146,7 @@ if(epigenetic_Name!="") {
     setwd(file.path("Results", epigenetic_Name))
 
     # Do the differential expression analysis                      
-    limmaResults <- doLimmaAnalysis(epigeneticsData$Target, epigeneticsData$IntensityData, epi_foldchange_Threshold, epi_pvalue_Threshold, reference_Condition)
+    limmaResults <- doLimmaAnalysis(epigeneticsData$Target, epigeneticsData$IntensityData, epi_foldchange_Threshold, epi_pvalue_Threshold, reference_Condition, epi_pvalue_Adjusted)
     dmProbesPerGene <- getNumberOfDMProbesPerGene(limmaResults$DiffExpr)
     
     # Generate QC plots
@@ -233,7 +235,7 @@ if(transcriptomic_Name!="") {
     setwd(file.path("Results", transcriptomic_Name))
 
     # Do limma analysis
-    limmaResultsTrans <- doLimmaAnalysis(transcriptomicsData$Target, transcriptomicsData$IntensityData, trans_foldchange_Threshold, trans_pvalue_Threshold, reference_Condition)
+    limmaResultsTrans <- doLimmaAnalysis(transcriptomicsData$Target, transcriptomicsData$IntensityData, trans_foldchange_Threshold, trans_pvalue_Threshold, reference_Condition, trans_pvalue_Adjusted)
 
     # Output limma results.
     outputLimmaResults(limmaResultsTrans, annotationTrans, reference_Condition, otherCondition)
