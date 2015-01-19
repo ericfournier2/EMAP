@@ -199,7 +199,7 @@ if(epigenetic_Name!="") {
     setwd("Spatial analysis")
     tryCatch( {
         generateSpatialFCProfile(limmaResults$Fit, annotation,
-                                 filename="Spatial chromosome PVal Analysis",
+                                 filename="Spatial chromosome FC Analysis",
                                  chromosomes="All")
         generateSpatialPValProfile(limmaResults$Fit, annotation,
                                    filename="Spatial chromosome PVal Analysis",
