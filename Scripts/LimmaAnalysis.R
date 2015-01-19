@@ -26,7 +26,11 @@ listAboveBG <- function(intensityData, targetData, reference_Condition) {
 }
 
 subsetFit <- function(fitObject, indices) {
-    return(data.frame(ID=fitObject$genes$ID, Coef=as.vector(fitObject$coefficients), PVal=as.vector(fitObject$p.value))[indices,])
+    return(data.frame(ID=fitObject$genes$ID,
+                      Coef=as.vector(fitObject$coefficients),
+                      PVal=as.vector(fitObject$p.value),
+                      RawPVal=as.vector(fitObject$raw.p.value),
+                      AdjPVal=as.vector(fitObject$adj.p.value))[indices,])
 }
 
 # Perform differential methylation analysis using the Limma package.
@@ -40,7 +44,7 @@ subsetFit <- function(fitObject, indices) {
 #      Norm:     Normalized intensity data.
 #      Fit:      Linear fit data.
 #      DiffExpr: List of differentially expressed genes.
-doLimmaAnalysis <- function(targetData, intensityData, foldChangeCutoff, pValueCutoff, refCondition) {
+doLimmaAnalysis <- function(targetData, intensityData, foldChangeCutoff, pValueCutoff, refCondition, useAdjustedPValue=FALSE) {
     # If no reference condition was provided, pick one randomly (Red channel of first array).
     refCond <- refCondition
     if(is.na(refCondition) || refCondition=="") {
@@ -58,7 +62,13 @@ doLimmaAnalysis <- function(targetData, intensityData, foldChangeCutoff, pValueC
 	fitDesign <- modelMatrix(targetData, ref=refCond)	
 	fit <- lmFit(Std_MA_Between, design=fitDesign)
 	ebayes_fit <- eBayes(fit)
+    ebayes_fit$raw.p.value <- ebayes_fit$p.value
+    ebayes_fit$adj.p.value <- p.adjust(ebayes_fit$p.value, method="fdr")
 	
+    if(useAdjustedPValue) {
+        ebayes_fit$p.value <- ebayes_fit$adj.p.value
+    }
+    
     # Determine which probes are differentially expressed/methylated.
 	coef <- abs(ebayes_fit$coefficients) > foldChangeCutoff
 	pval <- ebayes_fit$p.value < pValueCutoff
