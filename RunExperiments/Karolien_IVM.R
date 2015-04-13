@@ -44,9 +44,11 @@ combined_Name <- "Karolien/IVM/Combined"
 # 9. Set thresholds for significance.
 epi_foldchange_Threshold <- log2(1.5)
 epi_pvalue_Threshold <- 0.05
+epi_pvalue_Adjusted <- FALSE
 
 trans_foldchange_Threshold <- log2(1.5)
 trans_pvalue_Threshold <- 0.05
+trans_pvalue_Adjusted <- FALSE
 
 # 10. If you have been using the beta version  of the chip (with probe names GT_HQ...), change
 #     this to "v1". Otherwise (if the probe names are EDMA_MET...), keep this set as "v2".
