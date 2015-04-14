@@ -204,7 +204,6 @@ generateVolcanoPlot <- function(fitData, foldchange_Threshold, pvalue_Threshold,
 #    qualifier:     A qualifier for the MA plot, such as "Raw" or "Normalized".
 generateMAPlots <- function(intensityData, filenames, qualifier) {
     # Split all probes into types.
-    
     if(VERSION=="v1") {
         ctrlTypes <- substr(intensityData$genes$ID, 1, 11)
         ctrlTypes[substr(ctrlTypes, 1, 2) != "GT"] <- "Agilent\nControl"
@@ -221,13 +220,13 @@ generateMAPlots <- function(intensityData, filenames, qualifier) {
         ctrlTypes <- substr(intensityData$genes$ID, 1, 9)
         ctrlTypes[substr(ctrlTypes, 1, 2) != "GT"] <- "Agilent\nControl"
         ctrlTypes[substr(ctrlTypes, 1, 6) == "GT_DIG"] <- "Digestion\nControl"
-        ctrlTypes[ctrlTypes == "GT_pig_Hq" | ctrlTypes == "GT_pig_Lq"] <- "Standard\nProbe"
+        ctrlTypes[ctrlTypes == "GT_pig_Hq" | ctrlTypes == "GT_pig_Lq" | ctrlTypes == "GT_MET_ch" | ctrlTypes == "GT_MET_GL"] <- "Standard\nProbe"
         ctrlTypes[ctrlTypes == "GT_MET_SP"] <- "Spike-in"    	
 	}
     
     # Turn types into a factor for color ordering.
     ctrlTypes <- factor(ctrlTypes, levels=c("Standard\nProbe", "Digestion\nControl", "Agilent\nControl", "Spike-in"))
-    
+
     # For each array in the intensitydata object:
     for(array in 1:ncol(intensityData$M)) {
         # Put data inside a data frame, and remove agilent controls.
@@ -237,6 +236,7 @@ generateMAPlots <- function(intensityData, filenames, qualifier) {
 
         # Fit a loess curve to all data.
         completeObs <- is.finite(dataDF$A) & is.finite(dataDF$M)
+        save(list=ls(), file="Dump.RData")
         allFit <- lowess(dataDF$A[completeObs], dataDF$M[completeObs], f=0.3)
         allFitDF <- data.frame(x=allFit$x, y=allFit$y)
         

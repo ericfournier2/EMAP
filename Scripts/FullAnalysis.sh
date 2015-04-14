@@ -17,13 +17,13 @@ TRANS_PVALUE_ADJUSTED=${14}
 VERSION=${15}
 
 # If version is unspecified or invalid, default to v2.
-if [ "$VERSION" != "v1" -a "$VERSION" != "pigv1" ]
+if [ "$VERSION" != "v1" -a "$VERSION" != "pigv1" -a "$VERSION" != "pigv2" ]
 then
     VERSION="v2"
 fi
 
 # Select organism.
-if [ "$VERSION" == "pigv1" ]
+if [ "$VERSION" == "pigv1" -o "$VERSION" == "pigv2" ]
 then
     ORGANISM="pig"
 else

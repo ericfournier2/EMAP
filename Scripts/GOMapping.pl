@@ -27,26 +27,42 @@ use List::MoreUtils qw(uniq);
 use ReadTable;
 
 my $version = $ARGV[0];
+my $goFile = $ARGV[1];
+# Cow: "Annotations/gene_association.goa_cow"
+# Pig: "Annotations/gene_association.goa_pig"
+my $symbolMapFile = "";
+if(scalar(@ARGV)>2) {
+    $symbolMapFile = $ARGV[2];
+}
+# Cow: none
+# Pig: "Annotations/RefSeq2Gene_Pig.txt"
 
 # Load GO annotation.
 # Source: http://geneontology.org/gene-associations/gene_association.goa_cow.gz
 # http://geneontology.org/page/download-annotations for a list of all available annotations.
 my @GOColNames = ("DB", "DBObjectID", "Symbol", "Qualifier", "GOID", "GOReference", "EvidenceCode", "WithOrFrom", "Aspect", "GeneName", "Synonym", "ObjectType", "Taxon", "Date", "AssignedBy", "Extension", "GeneProductFormID");
-my $cowGOAssociations = readGO("Annotations/gene_association.goa_cow", 2);
+my $cowGOAssociations = readGO($goFile, 2);
 
 # Read GO association files, but key them by database (Uniprot, SGD, MGI) IDs.
-my $cowGOAssociationsDBID = readGO("Annotations/gene_association.goa_cow", 1);
+my $cowGOAssociationsDBID = readGO($goFile, 1);
 
 # Load EDMA annotations.
 my $edmaAnnotations = readTable("Annotations/" . $version . "/EDMA.Annotation.txt", "\t", "Probe");
 
+my $symbolMap = {};
+if($symbolMapFile ne "") {
+    $symbolMap = readTable($symbolMapFile, "\t", "ID");
+}
+
 # Loop over all EMBV3 probes.
 foreach my $probe (keys %{$edmaAnnotations}) {
     print $probe . "\t";
-    
     my @uniqGOIDs = ();
     my @egGOIDs = ();    
-    if(substr($probe, 0, 8) eq "EDMA_MET" || substr($probe, 0, 5) eq "GT_HQ" || substr($probe, 0, 5) eq "GT_LQ") {
+    if(substr($probe, 0, 8) eq "EDMA_MET" ||
+       substr($probe, 0, 5) eq "GT_HQ" || substr($probe, 0, 5) eq "GT_LQ" ||
+       substr($probe, 0, 6) eq "GT_pig" || substr($probe, 0, 9) eq "GT_MET_ch" || substr($probe, 0, 9) eq "GT_MET_GL"
+       ) {
         # Get a list of non-redundant gene symbols for this probe.
         my @symbolsAll = ( split(" ", $edmaAnnotations->{$probe}->{"Proximal_Promoter"}),
                            split(" ", $edmaAnnotations->{$probe}->{"Promoter"}), 
@@ -58,6 +74,16 @@ foreach my $probe (keys %{$edmaAnnotations}) {
         }
         
         my @symbols = uniq(@symbolsAll);
+        if($symbolMapFile ne "") {
+            for(my $i=0; $i<scalar(@symbols); ++$i) {
+                if(exists($symbolMap->{$symbols[$i]})) {
+                    $symbols[$i] = $symbolMap->{$symbols[$i]}->{"Symbol"};
+                } else {
+                    print STDERR "No mapping for " . $symbols[$i] . "\n";
+                }
+            }
+        }
+        
         
         # Loop over all symbols, and accumulate the GO IDs associated with them.
         my @GOIDs = ();

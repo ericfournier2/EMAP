@@ -4,7 +4,7 @@ library(GO.db)
 library(topGO)
 
 probe2goEpi <- readMappings(file.path(annotationFolder, "GO_Filtered.map"))
-probe2goTrans <- readMappings("Annotations/probe2go.map")
+probe2goTrans <- readMappings(file.path(speciesFolder, "probe2go.map"))
 epiSymbols <- read.table(file.path(annotationFolder, "ProbeSymbol.mapping"), sep="\t", header=TRUE)
 
 conditionalPastePrefix = function(x, y) {

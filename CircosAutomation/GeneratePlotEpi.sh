@@ -5,26 +5,26 @@ mkdir -p ProcessedData
 for f in Data/"$1"/Fragment-*
 do
     outbase=`basename "$f"`
-    sed "1d" "$f" | grep -v -F "NA" | perl AverageWindow.pl 5000000 20 > "ProcessedData/$outbase"
+    sed "1d" "$f" | grep -v -F "NA" | grep -v "^gi" | perl AverageWindow.pl 5000000 20 > "ProcessedData/$outbase"
 done
 
 for f in Data/"$1"/Fragment-*-Significant*
 do
     outbase=`basename "$f"`
-    sed "1d" "$f" | grep -v -F "NA" | perl AverageWindow.pl 5000000 1 > "ProcessedData/$outbase"
+    sed "1d" "$f" | grep -v -F "NA" | grep -v "^gi" | perl AverageWindow.pl 5000000 1 > "ProcessedData/$outbase"
 done
 
 for f in Data/"$1"/Fragment-*-30K*
 do
     outbase=`basename "$f"`
-    sed "1d" "$f" | grep -v -F "NA" | perl AverageWindow.pl 5000000 5 > "ProcessedData/$outbase"
+    sed "1d" "$f" | grep -v -F "NA" | grep -v "^gi" | perl AverageWindow.pl 5000000 5 > "ProcessedData/$outbase"
 done
 
-sed "1d" "Data/$1/Imprint-Fold-Change.bedgraph" | grep -v -F "NA" | perl AverageWindowImprint.pl 5000000 > "ProcessedData/Imprint-Fold-Change.bedgraph"
+sed "1d" "Data/$1/Imprint-Fold-Change.bedgraph" | grep -v -F "NA" | grep -v "^gi" | perl AverageWindowImprint.pl 5000000 > "ProcessedData/Imprint-Fold-Change.bedgraph"
 
 
 # Process DiffExpr values for scatterplot.
-sed "1d" "Data/$1/DiffExpr-P-Value.bedgraph" | sort -k 4nr | head -n 200 > ProcessedData/DiffExpr-P-Value.bedgraph
+sed "1d" "Data/$1/DiffExpr-P-Value.bedgraph" | grep -v "^gi" | sort -k 4nr | head -n 200 > ProcessedData/DiffExpr-P-Value.bedgraph
 
 # Create output directory.
 mkdir -p Output/"$2"

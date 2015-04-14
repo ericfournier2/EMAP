@@ -45,10 +45,16 @@ if(!exists("VERSION")) {
     VERSION <- "v2"
 }
 
+species <- "cow"
+if(VERSION=="pigv1" || VERSION=="pigv2") {
+    species <- "pig"
+}
+
 # Define some paths that might be used by sub-scripts to load ressources.
 annotationFolder <- file.path("Annotations", VERSION)
+speciesFolder <- file.path("Annotations", species)
 dir.create(file.path(getwd(), "Annotations", "KEGG"), showWarnings=FALSE)
-annotationKEGG <- file.path(getwd(), "Annotations", "KEGG")
+annotationKEGG <- file.path(getwd(), "Annotations", species, "KEGG")
 divergentScalePath <- file.path(getwd(), "Annotations", "DivergenceScaleNoLabel.png")
 
 # Determine path of pre-computed gene indices/counts
@@ -69,7 +75,7 @@ source("Scripts/GenerateBedgraph.R")
 source("Scripts/BuildGeneAnnotation.R")
 source("Scripts/topGOEnrichment.R")
 source("Scripts/PathwayAnalysis.R")
-
+    
 # Utility function to calculate a cutoff for an array.
 calculateCutoffs <- function(intensityData) {
     negControlIndices <- intensityData$genes$ID=="(-)3xSLv1"
@@ -156,7 +162,7 @@ if(epigenetic_Name!="") {
     generateMAPlots(limmaResults$Norm, epigeneticsData$Target$Filename, " - Normalized")
     generateDigestionPlots(epigeneticsData$IntensityData, annotation, epigeneticsData$Target$Filename)
     # Generate Spike plot based on version.
-    if(VERSION=="v1" || VERSION=="pigv1") {
+    if(VERSION=="v1" || VERSION=="pigv1" || VERSION=="pigv2") {
         # Get additional information about the spikes.
         spikeTable <- read.table(file.path(oldWD, annotationFolder, "Spikes.txt"), sep="\t", header=TRUE)    
         generateSpikePlots(epigeneticsData$IntensityData, epigeneticsData$Target$Filename, spikeTable)
@@ -192,6 +198,7 @@ if(epigenetic_Name!="") {
     # Perform GO enrichment analysis
     charDiffID <- as.character(limmaResults$DiffExpr$ID)
     goEnrichment <- performTopGOEnrichment(unique(charDiffID[charDiffID %in% annotation$Probe]), annotation$Probe, "GO Enrichment", "Epigenetic")
+
     
     # Perform hot-spot detection.
     hotSpots <- doHotSpotDetection(limmaResults$Fit, annotation)
@@ -225,9 +232,9 @@ if(transcriptomic_Name!="") {
     if(!performSanityCheck(transcriptomicsData, transcriptomic_Folder)) {
         quit(save="no", status=ERROR_INVALID_TRANSCRIPTOMIC_FORMAT)
     }
-    bedTrans <- read.table("Annotations/Circos-BESTv1.bed", sep="\t", col.names=c("BEDChromosome", "Start", "End", "Probe"))
+    bedTrans <- read.table(file.path(speciesFolder, "Trans.bed"), sep="\t", col.names=c("BEDChromosome", "Start", "End", "Probe"))
     otherCondition <- getOtherCondition(transcriptomicsData$Target, reference_Condition)
-    annotationTrans <- read.table("Annotations/EMBV3.annotation_table_2.xls", header=TRUE, sep="\t", quote="")
+    annotationTrans <- read.table(file.path(speciesFolder, "Trans.annotation.txt"), header=TRUE, sep="\t", quote="", comment.char = "")
     
     # Move into output directory
     dir.create(file.path("Results", transcriptomic_Name), showWarnings=FALSE, recursive=TRUE)

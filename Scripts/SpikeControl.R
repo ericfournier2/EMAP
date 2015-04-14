@@ -2,7 +2,7 @@ library(ggplot2)
 
 generateSpikePlots <- function(intensityData, filenames, spikeTable=NULL) {
 	# Get the spike intensity data.
-	if((VERSION=="v1") || (VERSION=="pigv1")) {
+	if((VERSION=="v1") || (VERSION=="pigv1") || (VERSION=="pigv2")) {
         spikeData <- intensityData[substr(intensityData$genes$ID, 0, 10)=="GT_MET_SPK",]
         spikeData <- spikeData[!is.na(spikeData$genes$ID),]
         # Remove all unused spikes
@@ -43,7 +43,7 @@ generateSpikePlots <- function(intensityData, filenames, spikeTable=NULL) {
             for(enzyme in c(1:3)) {
                 for(controlType in c(1:2)) {
                     # Get the indices of the relevant controls.
-                    if(VERSION=="v1" || VERSION=="pigv1") {
+                    if(VERSION=="v1" || VERSION=="pigv1" || VERSION=="pigv2") {
                         spikeNames <- spikeTable$Probe[(spikeTable$Enzyme == enzymeNames[enzyme]) & (spikeTable$Type == typeCode[controlType])]
                         indices <- spikeData$genes$ID %in% spikeNames
                     } else {

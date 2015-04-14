@@ -7,7 +7,8 @@ library(pathview)
 library(Heatplus)
 
 # Load up saved list of pathways.
-load("Annotations/btaGsets.RData")
+load(file.path(speciesFolder, "gsets.RData"))
+speciesAbbreviation <- c(cow="bta", pig="ssc")
 
 # Determines if members of certain KEGG pathways are significantly overrepresented
 # in a given set of probes, and generates a graphical representation of the pathway
@@ -42,18 +43,23 @@ performPathwayEnrichment <- function(chosenProbes, universeSubset, annotation, s
     }
     
     # Prepare the list of valid IDs.
-    allGeneIDs <- gsub("GeneID:", "", annotation$GeneID)
-    allGeneIDs[!grepl("^\\d+$", allGeneIDs)] <- ""
+    if(species=="cow") {
+        allGeneIDs <- gsub("GeneID:", "", annotation$GeneID)
+        allGeneIDs[!grepl("^\\d+$", allGeneIDs)] <- ""
 
-    allValidIDs <- allGeneIDs[allGeneIDs != ""]
-    
+        allValidIDs <- allGeneIDs[allGeneIDs != ""]
+    } else {
+        allGeneIDs <- annotation$GeneID
+        allValidIDs <- allGeneIDs[allGeneIDs != ""]
+    }
+
     # Which Entrez IDs are part of the chosen subset?
     chosenGeneIDs <- allGeneIDs[annotation$Probe %in% chosenProbes]
     chosenGeneIDs <- chosenGeneIDs[chosenGeneIDs != ""]
     
     # Which Entrez IDs are part of the universe subset?
     universeGeneIDs <- allGeneIDs[annotation$Probe %in% universeSubset]
-    universeGeneIDs <- universeGeneIDs[universeGeneIDs != ""]
+    universeGeneIDs <- universeGeneIDs[universeGeneIDs != ""]   
     
     # Data-frame for output.
     results <- data.frame(Pathway=character(0),  # The pathway of interest.
@@ -65,9 +71,9 @@ performPathwayEnrichment <- function(chosenProbes, universeSubset, annotation, s
                           Expected=numeric(0))   # The expected number of Entrez IDs which should be in the "Chosen" subset if the distribution was random.
 
     # Loop over all non-disease pathway.                          
-    for(pathway in names(btaGsets$kg.sets[-btaGsets$dise.idx])) {
+    for(pathway in names(gsets$kg.sets[-gsets$dise.idx])) {
         # Determine the set of pathway IDs which could possibly be drawn.
-        allPathwayIDs <- btaGsets$kg.sets[[pathway]]
+        allPathwayIDs <- gsets$kg.sets[[pathway]]
         allPathwayIDs <- allPathwayIDs[allPathwayIDs %in% universeGeneIDs]
     
         # Calculate metrics for the hypergeometric tests.
@@ -95,12 +101,17 @@ performPathwayEnrichment <- function(chosenProbes, universeSubset, annotation, s
             names(scores) <- universeSubset
             
             # Only keep scores from constitutive probes to avoid duplicates.
-            scoresSubset <- scores[annotation$Target_Location[match(as.character(names(scores)), as.character(annotation$Probe))]=="Constitutive"]
-            names(scoresSubset) <- allGeneIDs[match(as.character(names(scoresSubset)), as.character(annotation$Probe))]            
+            if(species=="cow") {
+                scoresSubset <- scores[annotation$Target_Location[match(as.character(names(scores)), as.character(annotation$Probe))]=="Constitutive"]
+                names(scoresSubset) <- allGeneIDs[match(as.character(names(scoresSubset)), as.character(annotation$Probe))]            
+            } else {
+                scoresSubset <- scores
+                names(scoresSubset) <- allGeneIDs[match(as.character(names(scoresSubset)), as.character(annotation$Probe))]
+            }
             
             # Generate the graphical representation for this pathway.
-            pathwayID <- gsub("(^bta\\d+).*", "\\1", results$Pathway[pathway])
-            pathview(scoresSubset, pathway.id=pathwayID, , species="bta", kegg.dir=annotationKEGG)
+            pathwayID <- gsub(paste("(^", speciesAbbreviation[species], "\\d+).*", sep=""), "\\1", results$Pathway[pathway])
+            pathview(scoresSubset, pathway.id=pathwayID, , species=speciesAbbreviation[species], kegg.dir=annotationKEGG)
         }
     }
     
