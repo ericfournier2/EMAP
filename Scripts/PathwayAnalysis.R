@@ -96,7 +96,7 @@ performPathwayEnrichment <- function(chosenProbes, universeSubset, annotation, s
     
     # If scores were provided, generate graphical representation of the significantly enriched pathways.
     if(!is.null(scores)) {
-        for(pathway in which(results$PVal < 0.05)) {
+        for(pathway in which(results$PVal < 0.05 & results$Chosen > 0)) {
             # pathview expects the data to have row/element names corresponding to Entrez Gene IDs.
             names(scores) <- universeSubset
             
