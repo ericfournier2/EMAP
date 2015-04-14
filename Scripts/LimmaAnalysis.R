@@ -236,7 +236,6 @@ generateMAPlots <- function(intensityData, filenames, qualifier) {
 
         # Fit a loess curve to all data.
         completeObs <- is.finite(dataDF$A) & is.finite(dataDF$M)
-        save(list=ls(), file="Dump.RData")
         allFit <- lowess(dataDF$A[completeObs], dataDF$M[completeObs], f=0.3)
         allFitDF <- data.frame(x=allFit$x, y=allFit$y)
         
