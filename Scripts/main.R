@@ -80,8 +80,8 @@ source("Scripts/PathwayAnalysis.R")
 calculateCutoffs <- function(intensityData) {
     negControlIndices <- intensityData$genes$ID=="(-)3xSLv1"
     probeSet <- intensityData[negControlIndices,]
-    return(c( mean(probeSet$R, na.rm=TRUE) + 4*apply(probeSet$R, 2, sd, na.rm=TRUE),
-              mean(probeSet$G, na.rm=TRUE) + 4*apply(probeSet$G, 2, sd, na.rm=TRUE)))
+    return(c( apply(probeSet$R*probeSet$weights, 2, mean, na.rm=TRUE) + 4*apply(probeSet$R*probeSet$weights, 2, sd, na.rm=TRUE),
+              apply(probeSet$G*probeSet$weights, 2, mean, na.rm=TRUE) + 4*apply(probeSet$G*probeSet$weights, 2, sd, na.rm=TRUE)))
 }
 
 # Utility function to get the non-reference condition from a target object.
