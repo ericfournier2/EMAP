@@ -30,11 +30,11 @@ sed "1d" "Data/$1/DiffExpr-P-Value.bedgraph" | grep -v "^gi" | sort -k 4nr | hea
 mkdir -p Output/"$2"
 
 sed -e "s/OUTPUT_FILE/$2/g" Input/conf/epi.circos.conf.template |
-    sed -e "s/ORGANISM/$3/g"  > temp
-sed -e "s/PROBE_SUBSET//g" temp > "Output/$2/$2.epi.circos.conf"
-sed -e "s/PROBE_SUBSET/-Significant/g" temp > "Output/$2/$2.epi.circos.sig.conf"
-sed -e "s/PROBE_SUBSET/-30K/g" temp > "Output/$2/$2.epi.circos.30K.conf"
-rm temp
+    sed -e "s/ORGANISM/$3/g"  > Output/temp
+sed -e "s/PROBE_SUBSET//g" Output/temp > "Output/$2/$2.epi.circos.conf"
+sed -e "s/PROBE_SUBSET/-Significant/g" Output/temp > "Output/$2/$2.epi.circos.sig.conf"
+sed -e "s/PROBE_SUBSET/-30K/g" Output/temp > "Output/$2/$2.epi.circos.30K.conf"
+rm Output/temp
 
 # Generate The circos plot.
 circos -conf "Output/$2/$2.epi.circos.conf"
