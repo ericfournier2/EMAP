@@ -104,7 +104,8 @@ then
 elif [ "$EPIGENETIC_NAME" != "" ]
 then
 	zip -r "$CIRCOS_FOLDER".zip "Results/$EPIGENETIC_NAME/"
-else
+elif [ "$CIRCOS_FOLDER" != "" ]
+then
 	zip -r "$CIRCOS_FOLDER".zip "Results/$TRANSCRIPTOMIC_NAME/"
 fi
 

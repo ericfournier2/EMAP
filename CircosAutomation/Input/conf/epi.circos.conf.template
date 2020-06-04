@@ -11,13 +11,13 @@ chromosomes_units = 1000000
     # P-value histogram plots.
     <plot>
         <<include Input/conf/P-Value-HistogramPROBE_SUBSET.conf.template>>
-        file = ProcessedData/Fragment-P-ValuePROBE_SUBSET.bedgraph
+        file = ProcessedData/OUTPUT_FILE/Fragment-P-ValuePROBE_SUBSET.bedgraph
         r1   = 0.99r
         r0   = 0.89r        
     </plot>
     # <plot>
     #     <<include Input/conf/P-Value-Histogram.conf.template>>
-    #     file = ProcessedData/Trans-P-Value.bedgraph
+    #     file = ProcessedData/OUTPUT_FILE/Trans-P-Value.bedgraph
     #     r1   = 0.73r
     #     r0   = 0.63r        
     # </plot>
@@ -25,13 +25,13 @@ chromosomes_units = 1000000
     # Diff-expr overlays for the p-value plots.
     <plot>
         <<include Input/conf/DiffExpr.conf.template>>
-        file = ProcessedData/DiffExpr-P-Value.bedgraph
+        file = ProcessedData/OUTPUT_FILE/DiffExpr-P-Value.bedgraph
         r1   = 0.99r
         r0   = 0.89r
     </plot>
     # <plot>
     #     <<include Input/conf/DiffExpr.conf.template>>
-    #     file = ProcessedData/DiffExpr-P-Value-Trans.bedgraph
+    #     file = ProcessedData/OUTPUT_FILE/DiffExpr-P-Value-Trans.bedgraph
     #     r1   = 0.73r
     #     r0   = 0.63r
     # </plot>
@@ -39,27 +39,27 @@ chromosomes_units = 1000000
     # Fold-change plots.
     <plot>
         <<include Input/conf/FC-Histogram.conf.template>>
-        file = ProcessedData/Fragment-Fold-ChangePROBE_SUBSET.bedgraph
+        file = ProcessedData/OUTPUT_FILE/Fragment-Fold-ChangePROBE_SUBSET.bedgraph
         r1   = 0.86r
         r0   = 0.76r        
     </plot>
     # <plot>
     #     <<include Input/conf/FC-Histogram.conf.template>>
-    #     file = ProcessedData/Trans-FC.bedgraph
+    #     file = ProcessedData/OUTPUT_FILE/Trans-FC.bedgraph
     #     r1   = 0.60r
     #     r0   = 0.50r        
     # </plot>
 
      <plot>
          <<include Input/conf/Cond-Mean-Histogram.conf.template>>
-         file = ProcessedData/Fragment-Cond-Mean-A.bedgraph
+         file = ProcessedData/OUTPUT_FILE/Fragment-Cond-Mean-A.bedgraph
          fill_color = lorange
          r1   = 0.73r
          r0   = 0.63r
      </plot>
     
     # Imprinted fold-change track.
-    <<include Input/conf/ORGANISM.Imprint.conf.template>>
+    <<include Output/OUTPUT_FILE/OUTPUT_FILE.Imprint.conf>>
 </plots>
 
 ################################################################
@@ -88,14 +88,14 @@ chromosomes_units = 1000000
 # Unused for now:
 #    <plot>
 #        <<include Cond-Mean-Histogram.conf.template>>
-#        file = ProcessedData/Fragment-Cond-Mean-A.bedgraph
+#        file = ProcessedData/OUTPUT_FILE/Fragment-Cond-Mean-A.bedgraph
 #        fill_color = lpurple
 #        r1   = 0.60r
 #        r0   = 0.50r
 #    </plot>
 #    <plot>
 #        <<include Cond-Mean-Histogram.conf.template>>
-#        file = ProcessedData/Fragment-Cond-Mean-B.bedgraph
+#        file = ProcessedData/OUTPUT_FILE/Fragment-Cond-Mean-B.bedgraph
 #        fill_color = lorange
 #        r1   = 0.73r
 #        r0   = 0.63r

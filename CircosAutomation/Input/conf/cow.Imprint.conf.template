@@ -1,6 +1,6 @@
 <plot>
     <<include Input/conf/FC-Histogram.conf.template>>
-    file = ProcessedData/Imprint-Fold-Change.bedgraph
+    file = ProcessedData/OUTPUT_FILE/Imprint-Fold-Change.bedgraph
     r1   = 0.60r
     r0   = 0.50r        
 </plot>

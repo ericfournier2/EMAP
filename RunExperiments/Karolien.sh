@@ -4,4 +4,4 @@
 
 ./Scripts/FullAnalysis.sh "Karolien/IVC/Epigenetic" "Karolien.target" "Raw/Karolien/IVC/Epigenetic" \
                   "Karolien/IVC/Transcriptomic" "Karolien.target" "Raw/Karolien/IVC/Transcriptomic" \
-                  "Basal" "Karolien/IVC/Combined" 1.5 0.05 1.5 0.05 v2         
+                  "Basal" "Karolien/IVC/Combined" 1.5 0.05 FALSE 1.5 0.05 FALSE v2         

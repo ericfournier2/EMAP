@@ -50,6 +50,29 @@ if(VERSION=="pigv1" || VERSION=="pigv2") {
     species <- "pig"
 }
 
+# Output parameters:
+cat("Epigenetic experiment name: ", epigenetic_Name, "\n")
+cat("Epigenetic target file: ", epigenetic_Target, "\n")
+cat("Epigenetic data folder: ", epigenetic_Folder, "\n")
+
+cat("Transcriptomic experiment name: ", transcriptomic_Name, "\n")
+cat("Transcriptomic target file: ", transcriptomic_Target, "\n")
+cat("Transcriptomic data folder: ", transcriptomic_Folder, "\n")
+
+cat("Reference condition: ", reference_Condition, "\n")
+    
+cat("Combined analysis name: ", combined_Name, "\n")
+    
+cat("Epigenetic fold-change threshold: ", epi_foldchange_Threshold, "\n")
+cat("Epigenetic p-value threshold: ", epi_pvalue_Threshold, "\n")
+cat("Should epigenetic p-value be FDR adjusted: ", epi_pvalue_Adjusted, "\n")
+    
+cat("Transcriptomic fold-change threshold: ", trans_foldchange_Threshold, "\n")
+cat("Transcriptomic p-value threshold: ", trans_pvalue_Threshold, "\n")
+cat("Should transcriptomic p-value be FDR adjusted: ", trans_pvalue_Adjusted, "\n")
+    
+cat("Platform version: ", VERSION, "\n")
+
 # Define some paths that might be used by sub-scripts to load ressources.
 annotationFolder <- file.path("Annotations", VERSION)
 speciesFolder <- file.path("Annotations", species)

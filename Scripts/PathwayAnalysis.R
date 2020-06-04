@@ -111,7 +111,7 @@ performPathwayEnrichment <- function(chosenProbes, universeSubset, annotation, s
             
             # Generate the graphical representation for this pathway.
             pathwayID <- gsub(paste("(^", speciesAbbreviation[species], "\\d+).*", sep=""), "\\1", results$Pathway[pathway])
-            pathview(scoresSubset, pathway.id=pathwayID, , species=speciesAbbreviation[species], kegg.dir=annotationKEGG)
+            pathview(scoresSubset, pathway.id=pathwayID, species=speciesAbbreviation[species], kegg.dir=annotationKEGG)
         }
     }
     
